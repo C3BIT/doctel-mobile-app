@@ -4,15 +4,18 @@ import {
   ScrollView,
   StyleSheet,
   Image,
-  // Platform,
+  Platform,
   KeyboardAvoidingView,
   Text,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar } from 'lucide-react-native';
-import { Card } from './../components/common/Card';
-import { Input } from './../components/common/Input';
-import { Button } from './../components/common/Button';
+import { Camera } from 'lucide-react-native';
+import { Card } from '../components/common/Card';
+import { Input } from '../components/common/Input';
+import { Button } from '../components/common/Button';
+import { Dropdown } from '../components/common/Dropdown';
+import { DatePicker } from '../components/common/DatePicker';
 
 export const ProfileScreen = () => {
   const [profile, setProfile] = useState({
@@ -24,85 +27,137 @@ export const ProfileScreen = () => {
     height: '1.65',
     weight: '48'
   });
+  
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showBloodGroupDropdown, setShowBloodGroupDropdown] = useState(false);
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+
+  const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  const genders = ['Male', 'Female', 'Other'];
 
   const handleUpdate = () => {
     console.log('Profile updated:', profile);
   };
 
+  const handleDateSelect = (date) => {
+    const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '/');
+    setProfile({...profile, dateOfBirth: formattedDate});
+    setShowDatePicker(false);
+  };
+
+  const handleSelectBloodGroup = (value) => {
+    setProfile({...profile, bloodGroup: value});
+    setShowBloodGroupDropdown(false);
+  };
+
+  const handleSelectGender = (value) => {
+    setProfile({...profile, gender: value});
+    setShowGenderDropdown(false);
+  };
+
+  const handleImageUpload = () => {
+    console.log('Opening image picker', Platform.OS);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        // behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.headerTitle}>Profile</Text>
           
-          <Card>
-            <View style={styles.avatarContainer}>
-              <Image
-                source={require('../assets/avatar.png')}
-                style={styles.avatar}
-              />
+          <View style={styles.cardWrapper}>
+            <View style={styles.avatarOuterContainer}>
+              <View style={styles.avatarContainer}>
+                <Image
+                  source={require('../assets/avatar.png')}
+                  style={styles.avatar}
+                />
+                <TouchableOpacity 
+                  style={styles.cameraIconContainer}
+                  onPress={handleImageUpload}
+                >
+                  <Camera size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <Input
-              label="First name & Last name"
-              value={profile.name}
-              onChangeText={(text) => setProfile({...profile, name: text})}
-            />
+            <Card style={styles.card}>
+              <View style={styles.cardContent}>
+                <View style={styles.spacer} />
+                
+                <Input
+                  label="First name & Last name"
+                  value={profile.name}
+                  onChangeText={(text) => setProfile({...profile, name: text})}
+                />
 
-            <View style={styles.row}>
-              <Input
-                label="Blood group"
-                value={profile.bloodGroup}
-                containerStyle={styles.halfInput}
-                rightElement={<Text style={styles.dropdownIcon}>▼</Text>}
-              />
-              <Input
-                label="Gender"
-                value={profile.gender}
-                containerStyle={styles.halfInput}
-                rightElement={<Text style={styles.dropdownIcon}>▼</Text>}
-              />
-            </View>
+                <View style={styles.row}>
+                  <Dropdown
+                    label="Blood group"
+                    value={profile.bloodGroup}
+                    options={bloodGroups}
+                    onSelect={handleSelectBloodGroup}
+                    isOpen={showBloodGroupDropdown}
+                    onToggle={() => setShowBloodGroupDropdown(!showBloodGroupDropdown)}
+                    containerStyle={styles.halfInput}
+                  />
+                  <Dropdown
+                    label="Gender"
+                    value={profile.gender}
+                    options={genders}
+                    onSelect={handleSelectGender}
+                    isOpen={showGenderDropdown}
+                    onToggle={() => setShowGenderDropdown(!showGenderDropdown)}
+                    containerStyle={styles.halfInput}
+                  />
+                </View>
 
-            <Input
-              label="Date of birth"
-              value={profile.dateOfBirth}
-              rightElement={<Calendar size={20} color="#666" />}
-            />
+                <DatePicker
+                  label="Date of birth"
+                  value={profile.dateOfBirth}
+                  onPress={() => setShowDatePicker(true)}
+                  isVisible={showDatePicker}
+                  onDateSelect={handleDateSelect}
+                  onCancel={() => setShowDatePicker(false)}
+                />
 
-            <Input
-              label="Mobile Number"
-              value={profile.mobileNumber}
-              keyboardType="phone-pad"
-            />
+                <Input
+                  label="Mobile Number"
+                  value={profile.mobileNumber}
+                  onChangeText={(text) => setProfile({...profile, mobileNumber: text})}
+                  keyboardType="phone-pad"
+                />
 
-            <View style={styles.row}>
-              <Input
-                label="Height (m)"
-                value={profile.height}
-                keyboardType="decimal-pad"
-                containerStyle={styles.halfInput}
-              />
-              <Input
-                label="Weight (kg)"
-                value={profile.weight}
-                keyboardType="decimal-pad"
-                containerStyle={styles.halfInput}
-              />
-            </View>
+                <View style={styles.row}>
+                  <Input
+                    label="Height (m)"
+                    value={profile.height}
+                    onChangeText={(text) => setProfile({...profile, height: text})}
+                    keyboardType="decimal-pad"
+                    containerStyle={styles.halfInput}
+                  />
+                  <Input
+                    label="Weight (kg)"
+                    value={profile.weight}
+                    onChangeText={(text) => setProfile({...profile, weight: text})}
+                    keyboardType="decimal-pad"
+                    containerStyle={styles.halfInput}
+                  />
+                </View>
 
-            <Button
-              title="Update"
-              onPress={handleUpdate}
-              style={styles.updateButton}
-            />
-          </Card>
+                <Button
+                  title="Update"
+                  onPress={handleUpdate}
+                  style={styles.updateButton}
+                />
+              </View>
+            </Card>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -120,6 +175,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingVertical: 20,
+    paddingHorizontal: 16,
   },
   headerTitle: {
     fontSize: 24,
@@ -128,15 +184,54 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  avatarContainer: {
+  cardWrapper: {
+    position: 'relative',
+    paddingTop: 40,
+  },
+  card: {
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cardContent: {
+    padding: 16,
+  },
+  avatarOuterContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
     alignItems: 'center',
-    marginBottom: 20,
+  },
+  avatarContainer: {
+    position: 'relative',
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#f0f0f0',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  cameraIconContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#20ACE2',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  spacer: {
+    height: 40,
   },
   row: {
     flexDirection: 'row',
@@ -151,48 +246,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 8,
     marginTop: 20,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  dropdownIcon: {
-    fontSize: 12,
-    color: '#666',
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-  },
-  input: {
-    flex: 1,
-    height: 44,
-    fontSize: 16,
-    color: '#333',
-    // paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-  },
-  disabledInput: {
-    backgroundColor: '#F5F5F5',
-  },
-  rightElement: {
-    marginLeft: 8,
-  },
+  }
+  
 });
-

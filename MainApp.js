@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ProfileScreen } from "./app/screens/ProfileScreen";
 import { enableScreens } from "react-native-screens";
+import { Header } from "./app/components/shared/Header";
 enableScreens();
 
 // Uncomment if you want to ignore logs
@@ -13,7 +14,6 @@ enableScreens();
 const Stack = createNativeStackNavigator();
 
 const MainApp = () => {
-  console.log("Welcome to Stack")
   return (
     <SafeAreaProvider>
       <NavigationContainer>
@@ -23,10 +23,10 @@ const MainApp = () => {
           barStyle="light-content" 
         />
         <Stack.Navigator 
-          screenOptions={{ 
-            animation: "slide_from_right",
-            headerShown: false
-          }}
+        screenOptions={({ route }) => ({ 
+          animation: "slide_from_right",
+          header: (props) => <Header {...props} title={route.name} />,
+        })}
         >
           <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
