@@ -34,7 +34,7 @@ const MainApp = () => {
         >
           {/* <Stack.Screen name="package" component={Package} /> */}
           {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
-          <Stack.Screen name="OTP" component={OTPVerificationScreen} />          
+          {/* <Stack.Screen name="OTP" component={OTPVerificationScreen} />           */}
           <Stack.Screen name="Login" component={LoginScreen} />          
         </Stack.Navigator>
       </NavigationContainer>
