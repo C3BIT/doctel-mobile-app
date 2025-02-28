@@ -9,6 +9,7 @@ import { Header } from "./app/components/shared/Header";
 import Package from "./app/screens/Package";
 import LoginScreen from "./app/features/auth/screens/LoginScreen";
 import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationScreen";
+import PackageScreen from "./app/screens/PackageScreen";
 enableScreens();
 
 // Uncomment if you want to ignore logs
@@ -32,7 +33,7 @@ const MainApp = () => {
           // header: (props) => <Header {...props} title={route.name} />,
         })}
         >
-          {/* <Stack.Screen name="package" component={Package} /> */}
+          <Stack.Screen name="package" component={PackageScreen} />
           {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
           {/* <Stack.Screen name="OTP" component={OTPVerificationScreen} />           */}
           <Stack.Screen name="Login" component={LoginScreen} />          
