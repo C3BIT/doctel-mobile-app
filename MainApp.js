@@ -6,6 +6,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ProfileScreen } from "./app/screens/ProfileScreen";
 import { enableScreens } from "react-native-screens";
 import { Header } from "./app/components/shared/Header";
+import Package from "./app/screens/Package";
+import LoginScreen from "./app/features/auth/screens/LoginScreen";
+import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationScreen";
+import PackageScreen from "./app/screens/PackageScreen";
 enableScreens();
 
 // Uncomment if you want to ignore logs
@@ -20,15 +24,19 @@ const MainApp = () => {
         <StatusBar 
           translucent 
           backgroundColor="transparent" 
-          barStyle="light-content" 
+          // barStyle="light-content" 
         />
         <Stack.Navigator 
         screenOptions={({ route }) => ({ 
           animation: "slide_from_right",
-          header: (props) => <Header {...props} title={route.name} />,
+          headerShown: false
+          // header: (props) => <Header {...props} title={route.name} />,
         })}
         >
-          <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="package" component={PackageScreen} />
+          {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
+          {/* <Stack.Screen name="OTP" component={OTPVerificationScreen} />           */}
+          <Stack.Screen name="Login" component={LoginScreen} />          
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
