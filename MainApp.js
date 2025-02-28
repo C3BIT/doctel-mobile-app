@@ -8,6 +8,7 @@ import { enableScreens } from "react-native-screens";
 import { Header } from "./app/components/shared/Header";
 import Package from "./app/screens/Package";
 import LoginScreen from "./app/features/auth/screens/LoginScreen";
+import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationScreen";
 enableScreens();
 
 // Uncomment if you want to ignore logs
@@ -19,11 +20,11 @@ const MainApp = () => {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        {/* <StatusBar 
+        <StatusBar 
           translucent 
           backgroundColor="transparent" 
           // barStyle="light-content" 
-        /> */}
+        />
         <Stack.Navigator 
         screenOptions={({ route }) => ({ 
           animation: "slide_from_right",
@@ -33,7 +34,8 @@ const MainApp = () => {
         >
           {/* <Stack.Screen name="package" component={Package} /> */}
           {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
-          <Stack.Screen name="Login" component={LoginScreen} />
+          {/* <Stack.Screen name="OTP" component={OTPVerificationScreen} />           */}
+          <Stack.Screen name="Login" component={LoginScreen} />          
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
