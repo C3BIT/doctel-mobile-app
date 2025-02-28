@@ -17,7 +17,7 @@ const LoginScreen = () => {
   const [mobileNumber, setMobileNumber] = useState('');
 
   const validatePhoneNumber = (number) => {
-    const phoneRegex = /^0\d{10}$/; // Must start with 0 and have 11 digits
+    const phoneRegex = /^0\d{10}$/;
     return phoneRegex.test(number);
   };
 
