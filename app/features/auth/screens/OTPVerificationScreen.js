@@ -6,36 +6,48 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Dimensions
 } from "react-native";
-import WaveBackground from "../../../components/common/WaveBackground";
 import { useDispatch, useSelector } from "react-redux";
-import { patientLogin } from "../../../redux/features/auth/patientAuthSlice";
 import { useRoute } from "@react-navigation/native";
+
+// Components
+import WaveBackground from "../../../components/common/WaveBackground";
 import Loader from "../../../components/common/Loader";
+
+import { patientLogin } from "../../../redux/features/auth/patientAuthSlice";
+
 const { width, height } = Dimensions.get('window');
+const OTP_LENGTH = 4;
+const INITIAL_TIMER_SECONDS = 150;
+
 const OTPVerificationScreen = () => {
-  const [otp, setOtp] = useState(["0", "5", "8", "3"]);
-  const inputRefs = useRef([...Array(4)].map(() => React.createRef()));
-  const [timer, setTimer] = useState(41);
-  const { isLoading, status } = useSelector(
-    (state) => state.auth
-  );
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
+  const [timer, setTimer] = useState(INITIAL_TIMER_SECONDS);
+  
+  const inputRefs = useRef(Array(OTP_LENGTH).fill(null).map(() => React.createRef()));
+  
+  const { verifyLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  
   const route = useRoute();
   const { phone } = route.params;
 
   useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer]);
+    const timerInterval = setInterval(() => {
+      setTimer((prevTimer) => {
+        if (prevTimer <= 1) {
+          clearInterval(timerInterval);
+          return 0;
+        }
+        return prevTimer - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, []);
 
   const handleChangeText = (value, index) => {
     if (/^[0-9]?$/.test(value)) {
@@ -43,7 +55,7 @@ const OTPVerificationScreen = () => {
       newOtp[index] = value;
       setOtp(newOtp);
 
-      if (value && index < 3) {
+      if (value && index < OTP_LENGTH - 1) {
         inputRefs.current[index + 1].focus();
       }
     }
@@ -57,18 +69,28 @@ const OTPVerificationScreen = () => {
 
   const handleVerify = () => {
     const enteredOtp = otp.join("");
-   dispatch(patientLogin({
-    otp: enteredOtp,
-    phone
-   }))
-  };
-
-  const formatTime = (seconds) => {
-    return `0:${seconds < 10 ? "0" + seconds : seconds}`;
+    console.log("=============otp============", enteredOtp,phone);
+    if (enteredOtp.length === OTP_LENGTH) {
+      dispatch(patientLogin({
+        otp: enteredOtp,
+        phone
+      }));
+    }
   };
 
   const handleResend = () => {
-    setTimer(41);
+    // Reset OTP fields
+    setOtp(Array(OTP_LENGTH).fill(""));
+    // Reset timer
+    setTimer(INITIAL_TIMER_SECONDS);
+    // TODO: Add API call to resend OTP
+  };
+
+  // Formatters
+  const formatTime = (totalSeconds) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
   };
 
   return (
@@ -77,7 +99,8 @@ const OTPVerificationScreen = () => {
         behavior={Platform.OS === "ios" ? "position" : "height"}
         style={styles.keyboardAvoidingView}
       >
-          { isLoading && <Loader />}
+        {verifyLoading && <Loader />}
+        
         <View style={styles.contentContainer}>
           <View style={styles.imageContent}>
             <Image
@@ -109,13 +132,27 @@ const OTPVerificationScreen = () => {
               ))}
             </View>
 
-            <Text style={styles.resendText}>
-              Resend code in {formatTime(timer)}
-            </Text>
+            <View style={styles.timerContainer}>
+              <Text style={styles.resendText}>
+                {timer > 0 
+                  ? `Resend code in ${formatTime(timer)}` 
+                  : "Didn't receive the code?"}
+              </Text>
+              
+              {timer === 0 && (
+                <TouchableOpacity onPress={handleResend}>
+                  <Text style={styles.resendButton}>Resend Code</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             <TouchableOpacity
-              style={styles.verifyButton}
+              style={[
+                styles.verifyButton,
+                otp.join("").length !== OTP_LENGTH && styles.disabledButton
+              ]}
               onPress={handleVerify}
+              disabled={otp.join("").length !== OTP_LENGTH}
               activeOpacity={0.8}
             >
               <Text style={styles.verifyButtonText}>Verify</Text>
@@ -180,10 +217,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
+  timerContainer: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
   resendText: {
     color: "white",
-    marginBottom: 32,
     fontSize: 14,
+    marginBottom: 8,
+  },
+  resendButton: {
+    color: "#4F8EF7",
+    fontSize: 14,
+    fontWeight: "bold",
   },
   verifyButton: {
     width: "100%",
@@ -192,6 +238,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginBottom: 16,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   verifyButtonText: {
     color: "white",

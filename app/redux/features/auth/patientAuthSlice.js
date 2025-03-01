@@ -30,6 +30,7 @@ const patientAuthSlice = createSlice({
   initialState: {
     isAuthenticated: false,
     isLoading: false,
+    verifyLoading: false,
     user: null,
     token: null,
     error: null,
@@ -52,7 +53,6 @@ const patientAuthSlice = createSlice({
         state.status = "sending_otp";
       })
       .addCase(sendOtp.fulfilled, (state, action) => {
-        console.log(action)
         state.isLoading = false;
         state.status = "otp_sent";
       })
@@ -63,19 +63,20 @@ const patientAuthSlice = createSlice({
       })
       
       .addCase(patientLogin.pending, (state) => {
-        state.isLoading = true;
+        state.verifyLoading = true;
         state.error = null;
         state.status = "logging_in";
       })
       .addCase(patientLogin.fulfilled, (state, action) => {
-        state.isLoading = false;
+        console.log(action)
+        state.verifyLoading = false;
         state.isAuthenticated = true;
         state.user = action.payload.data;
         state.token = action.payload.data.token;
         state.status = "logged_in";
       })
       .addCase(patientLogin.rejected, (state, action) => {
-        state.isLoading = false;
+        state.verifyLoading = false;
         state.error = action.payload.message || "Login failed";
         state.status = "error";
       });
