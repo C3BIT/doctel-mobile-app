@@ -52,6 +52,7 @@ const patientAuthSlice = createSlice({
         state.status = "sending_otp";
       })
       .addCase(sendOtp.fulfilled, (state, action) => {
+        console.log(action)
         state.isLoading = false;
         state.status = "otp_sent";
       })
