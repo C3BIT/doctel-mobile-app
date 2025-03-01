@@ -18,7 +18,7 @@ import { sendOtp } from "../../../redux/features/auth/patientAuthSlice";
 import Loader from "../../../components/common/Loader";
 
 const LoginScreen = () => {
-  const { isAuthenticated, isLoading, status } = useSelector(
+  const {isLoading, status } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
@@ -27,9 +27,10 @@ const LoginScreen = () => {
 
   useEffect(() => {
     if (status === "otp_sent") {
-      navigation.navigate("OTP");
+      navigation.navigate("OTP", { phone: mobileNumber });
     }
-  }, [status, navigation])
+  }, [status, navigation, mobileNumber]);
+  
   const validatePhoneNumber = (number) => {
     const phoneRegex = /^0\d{10}$/;
     return phoneRegex.test(number);

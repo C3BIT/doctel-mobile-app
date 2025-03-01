@@ -12,11 +12,21 @@ import {
   Dimensions
 } from "react-native";
 import WaveBackground from "../../../components/common/WaveBackground";
+import { useDispatch, useSelector } from "react-redux";
+import { patientLogin } from "../../../redux/features/auth/patientAuthSlice";
+import { useRoute } from "@react-navigation/native";
+import Loader from "../../../components/common/Loader";
 const { width, height } = Dimensions.get('window');
 const OTPVerificationScreen = () => {
   const [otp, setOtp] = useState(["0", "5", "8", "3"]);
   const inputRefs = useRef([...Array(4)].map(() => React.createRef()));
   const [timer, setTimer] = useState(41);
+  const { isLoading, status } = useSelector(
+    (state) => state.auth
+  );
+  const dispatch = useDispatch();
+  const route = useRoute();
+  const { phone } = route.params;
 
   useEffect(() => {
     if (timer > 0) {
@@ -47,15 +57,10 @@ const OTPVerificationScreen = () => {
 
   const handleVerify = () => {
     const enteredOtp = otp.join("");
-    const correctOtp = "1234";
-
-    if (enteredOtp === correctOtp) {
-      // Success case
-      Alert.alert("Success", "OTP verified successfully!");
-    } else {
-      // Error case
-      Alert.alert("Error", "Incorrect OTP. Please try again.");
-    }
+   dispatch(patientLogin({
+    otp: enteredOtp,
+    phone
+   }))
   };
 
   const formatTime = (seconds) => {
@@ -64,7 +69,6 @@ const OTPVerificationScreen = () => {
 
   const handleResend = () => {
     setTimer(41);
-    // Logic to resend OTP would go here
   };
 
   return (
@@ -73,6 +77,7 @@ const OTPVerificationScreen = () => {
         behavior={Platform.OS === "ios" ? "position" : "height"}
         style={styles.keyboardAvoidingView}
       >
+          { isLoading && <Loader />}
         <View style={styles.contentContainer}>
           <View style={styles.imageContent}>
             <Image
