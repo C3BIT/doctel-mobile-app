@@ -21,22 +21,23 @@ const MainApp = () => {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar 
-          translucent 
-          backgroundColor="transparent" 
-          // barStyle="light-content" 
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          // barStyle="light-content"
         />
-        <Stack.Navigator 
-        screenOptions={({ route }) => ({ 
-          animation: "slide_from_right",
-          headerShown: false
-          // header: (props) => <Header {...props} title={route.name} />,
-        })}
+        <Stack.Navigator
+          screenOptions={({ route }) => ({
+            animation: "slide_from_right",
+            headerShown: false,
+            // header: (props) => <Header {...props} title={route.name} />,
+          })}
         >
           <Stack.Screen name="package" component={PackageScreen} />
           {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
-          {/* <Stack.Screen name="OTP" component={OTPVerificationScreen} />           */}
-          <Stack.Screen name="Login" component={LoginScreen} />          
+
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="OTP" component={OTPVerificationScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
