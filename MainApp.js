@@ -33,7 +33,7 @@ const MainApp = () => {
             // header: (props) => <Header {...props} title={route.name} />,
           })}
         >
-          <Stack.Screen name="package" component={PackageScreen} />
+          {/* <Stack.Screen name="package" component={PackageScreen} /> */}
           {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
 
           <Stack.Screen name="Login" component={LoginScreen} />
