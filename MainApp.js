@@ -9,8 +9,8 @@ import { enableScreens } from "react-native-screens";
 // Screens
 import LoginScreen from "./app/features/auth/screens/LoginScreen";
 import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationScreen";
-import ProfileScreen from "./app/screens/ProfileScreen";
 import PackageScreen from "./app/screens/PackageScreen";
+import { ProfileScreen } from "./app/screens/ProfileScreen";
 
 enableScreens();
 
@@ -27,8 +27,8 @@ const AuthStack = () => (
 // Authenticated Stack
 const AppStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="Package" component={PackageScreen} />
+    <Stack.Screen name="Profile" component={ProfileScreen} />
   </Stack.Navigator>
 );
 
