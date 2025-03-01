@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -25,6 +25,11 @@ const LoginScreen = () => {
   const [mobileNumber, setMobileNumber] = useState("");
   const navigation = useNavigation();
 
+  useEffect(() => {
+    if (status === "otp_sent") {
+      navigation.navigate("OTP");
+    }
+  }, [status, navigation])
   const validatePhoneNumber = (number) => {
     const phoneRegex = /^0\d{10}$/;
     return phoneRegex.test(number);
