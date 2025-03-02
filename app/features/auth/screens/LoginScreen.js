@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     paddingHorizontal: 30,
-    paddingBottom: 30,
+    paddingBottom: height * 0.15,
   },
   signInText: {
     fontSize: 24,
