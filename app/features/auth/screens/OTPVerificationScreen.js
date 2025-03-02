@@ -8,10 +8,15 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  Dimensions
+  Dimensions,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 
 // Components
 import WaveBackground from "../../../components/common/WaveBackground";
@@ -21,20 +26,28 @@ import { patientLogin } from "../../../redux/features/auth/patientAuthSlice";
 import FlashMessage from "../../../components/shared/FlashMessage";
 
 const { width, height } = Dimensions.get('window');
+
+const getResponsiveSize = (size) => {
+  const standardWidth = 375;
+  return (width / standardWidth) * size;
+};
+
 const OTP_LENGTH = 4;
 const INITIAL_TIMER_SECONDS = 150;
 
 const OTPVerificationScreen = () => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [timer, setTimer] = useState(INITIAL_TIMER_SECONDS);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   
-  const inputRefs = useRef(Array(OTP_LENGTH).fill(null).map(() => React.createRef()));
+  const inputRefs = useRef([]);
   
   const { verifyLoading, error, status } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   
   const route = useRoute();
-  const { phone } = route.params;
+  const { phone } = route.params || { phone: '' };
 
   useEffect(() => {
     const timerInterval = setInterval(() => {
@@ -50,25 +63,51 @@ const OTPVerificationScreen = () => {
     return () => clearInterval(timerInterval);
   }, []);
 
-    useEffect(() => {
-      if (status === "error") {
-        FlashMessage.error(error || "Something went wrong!")
+  useEffect(() => {
+    if (status === "error") {
+      FlashMessage.error( error || "Unable to verify your credentials. Please try again.");
+    }
+  }, [status, error, navigation]);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
       }
-    }, [status]);
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    inputRefs.current = Array(OTP_LENGTH).fill(null).map((_, i) => inputRefs.current[i] || React.createRef());
+  }, []);
+
   const handleChangeText = (value, index) => {
     if (/^[0-9]?$/.test(value)) {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
 
-      if (value && index < OTP_LENGTH - 1) {
+      // Auto-advance to next input
+      if (value && index < OTP_LENGTH - 1 && inputRefs.current[index + 1]) {
         inputRefs.current[index + 1].focus();
       }
     }
   };
 
   const handleKeyPress = (e, index) => {
-    if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
+    if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0 && inputRefs.current[index - 1]) {
       inputRefs.current[index - 1].focus();
     }
   };
@@ -89,167 +128,216 @@ const OTPVerificationScreen = () => {
     // Reset timer
     setTimer(INITIAL_TIMER_SECONDS);
     // TODO: Add API call to resend OTP
+    // Instead of dispatch here, add your code to resend OTP
   };
 
-  // Formatters
   const formatTime = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
+  const otpInputSize = Math.min(getResponsiveSize(60), width * 0.18);
+
   return (
-    <WaveBackground>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "position" : "height"}
-        style={styles.keyboardAvoidingView}
-      >
-        {verifyLoading && <Loader />}
-        
-        <View style={styles.contentContainer}>
-          <View style={styles.imageContent}>
-            <Image
-              source={require("../../../assets/capa2.png")}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
-
-          <View style={styles.verificationContainer}>
-            <Text style={styles.verificationTitle}>Verification</Text>
-            <Text style={styles.verificationSubtitle}>
-              Enter the verification code that was sent to your mobile number
-            </Text>
-
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(el) => (inputRefs.current[index] = el)}
-                  style={styles.otpInput}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  value={digit}
-                  onChangeText={(value) => handleChangeText(value, index)}
-                  onKeyPress={(e) => handleKeyPress(e, index)}
-                  selectionColor="#1E3A8A"
-                />
-              ))}
-            </View>
-
-            <View style={styles.timerContainer}>
-              <Text style={styles.resendText}>
-                {timer > 0 
-                  ? `Resend code in ${formatTime(timer)}` 
-                  : "Didn't receive the code?"}
-              </Text>
-              
-              {timer === 0 && (
-                <TouchableOpacity onPress={handleResend}>
-                  <Text style={styles.resendButton}>Resend Code</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.verifyButton,
-                otp.join("").length !== OTP_LENGTH && styles.disabledButton
-              ]}
-              onPress={handleVerify}
-              disabled={otp.join("").length !== OTP_LENGTH}
-              activeOpacity={0.8}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <WaveBackground>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "position"}
+            style={styles.keyboardAvoidingView}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+          >
+            <ScrollView
+              contentContainerStyle={styles.scrollView}
+              bounces={false}
+              showsVerticalScrollIndicator={false}
             >
-              <Text style={styles.verifyButtonText}>Verify</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </WaveBackground>
+              {verifyLoading && <Loader />}
+              
+              <View style={styles.contentContainer}>
+                <View style={[
+                  styles.imageContent
+                ]}>
+                  <Image
+                    source={require("../../../assets/capa2.png")}
+                    style={[
+                      styles.image
+                    ]}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                <View style={styles.verificationContainer}>
+                  <Text style={styles.verificationTitle}>Verification</Text>
+                  <Text style={styles.verificationSubtitle}>
+                    Enter the verification code that was sent to your mobile number
+                  </Text>
+
+                  <View style={styles.otpContainer}>
+                    {otp.map((digit, index) => (
+                      <TextInput
+                        key={index}
+                        ref={(el) => (inputRefs.current[index] = el)}
+                        style={[
+                          styles.otpInput,
+                          { width: otpInputSize, height: otpInputSize }
+                        ]}
+                        keyboardType="number-pad"
+                        maxLength={1}
+                        value={digit}
+                        onChangeText={(value) => handleChangeText(value, index)}
+                        onKeyPress={(e) => handleKeyPress(e, index)}
+                        selectionColor="#1E3A8A"
+                        autoCorrect={false}
+                      />
+                    ))}
+                  </View>
+
+                  <View style={styles.timerContainer}>
+                    <Text style={styles.resendText}>
+                      {timer > 0 
+                        ? `Resend code in ${formatTime(timer)}` 
+                        : "Didn't receive the code?"}
+                    </Text>
+                    
+                    {timer === 0 && (
+                      <TouchableOpacity 
+                        onPress={handleResend}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Text style={styles.resendButton}>Resend Code</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.verifyButton,
+                      otp.join("").length !== OTP_LENGTH && styles.disabledButton
+                    ]}
+                    onPress={handleVerify}
+                    disabled={otp.join("").length !== OTP_LENGTH}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.verifyButtonText}>Verify</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </WaveBackground>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#223972",
+  },
   keyboardAvoidingView: {
     flex: 1,
   },
+  scrollView: {
+    flexGrow: 1,
+  },
   contentContainer: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: getResponsiveSize(24),
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + getResponsiveSize(10) : getResponsiveSize(10),
+    paddingBottom: getResponsiveSize(20),
   },
   imageContent: {
-    height: height * 0.5,
+    height: height * 0.35,
     alignItems: "center",
     justifyContent: "center",
+    paddingTop: getResponsiveSize(20),
   },
   image: {
-    width: width * 0.8,
-    height: width * 0.8,
+    width: Math.min(width * 0.8, 300),
+    height: Math.min(width * 0.8, 300),
+    maxWidth: 300,
+    maxHeight: 300,
   },
   verificationContainer: {
     width: "100%",
     flex: 1,
     alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: getResponsiveSize(20),
   },
   verificationTitle: {
-    fontSize: 24,
+    fontSize: getResponsiveSize(24),
     fontWeight: "600",
     color: "white",
-    marginBottom: 8,
+    marginBottom: getResponsiveSize(8),
     textAlign: "center",
   },
   verificationSubtitle: {
-    fontSize: 14,
+    fontSize: getResponsiveSize(14),
     color: "white",
     textAlign: "center",
-    marginBottom: 32,
-    width: "80%",
+    marginBottom: getResponsiveSize(32),
+    width: "90%",
+    maxWidth: 300,
   },
   otpContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "80%",
-    marginBottom: 24,
+    width: "90%",
+    maxWidth: 300,
+    marginBottom: getResponsiveSize(24),
   },
   otpInput: {
-    width: 60,
-    height: 60,
     backgroundColor: "#10294D",
-    borderRadius: 8,
+    borderRadius: getResponsiveSize(8),
     color: "white",
-    fontSize: 24,
+    fontSize: getResponsiveSize(24),
     fontWeight: "bold",
     textAlign: "center",
   },
   timerContainer: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: getResponsiveSize(32),
+    width: "100%",
   },
   resendText: {
     color: "white",
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: getResponsiveSize(14),
+    marginBottom: getResponsiveSize(8),
+    textAlign: "center",
   },
   resendButton: {
     color: "#4F8EF7",
-    fontSize: 14,
+    fontSize: getResponsiveSize(16),
     fontWeight: "bold",
+    padding: getResponsiveSize(5),
   },
   verifyButton: {
     width: "100%",
     backgroundColor: "#10294D",
-    paddingVertical: 16,
-    borderRadius: 8,
+    paddingVertical: getResponsiveSize(16),
+    borderRadius: getResponsiveSize(8),
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: getResponsiveSize(16),
+    height: getResponsiveSize(56),
+    justifyContent: "center",
   },
   disabledButton: {
     opacity: 0.6,
   },
   verifyButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: getResponsiveSize(16),
     fontWeight: "bold",
   },
 });
