@@ -1,24 +1,24 @@
 {
   "expo": {
-    "name": "doctel-mobile-app",
+    "name": "Doctel",
     "slug": "doctel-mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/doctel.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/doctel.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#223972"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/doctel.png",
+        "backgroundColor": "#223972"
       },
       "package": "com.anonymous.doctelmobileapp"
     },

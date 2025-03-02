@@ -3,41 +3,43 @@ import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ProfileScreen } from "./app/screens/ProfileScreen";
+import { useSelector } from "react-redux";
 import { enableScreens } from "react-native-screens";
-import { Header } from "./app/components/shared/Header";
-import Package from "./app/screens/Package";
+
+// Screens
 import LoginScreen from "./app/features/auth/screens/LoginScreen";
 import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationScreen";
 import PackageScreen from "./app/screens/PackageScreen";
-enableScreens();
+import { ProfileScreen } from "./app/screens/ProfileScreen";
 
-// Uncomment if you want to ignore logs
-// LogBox.ignoreAllLogs();
+enableScreens();
 
 const Stack = createNativeStackNavigator();
 
+// Unauthenticated Stack
+const AuthStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Screen name="OTP" component={OTPVerificationScreen} />
+  </Stack.Navigator>
+);
+
+// Authenticated Stack
+const AppStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Package" component={PackageScreen} />
+    <Stack.Screen name="Profile" component={ProfileScreen} />
+  </Stack.Navigator>
+);
+
 const MainApp = () => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar 
-          translucent 
-          backgroundColor="transparent" 
-          // barStyle="light-content" 
-        />
-        <Stack.Navigator 
-        screenOptions={({ route }) => ({ 
-          animation: "slide_from_right",
-          headerShown: false
-          // header: (props) => <Header {...props} title={route.name} />,
-        })}
-        >
-          <Stack.Screen name="package" component={PackageScreen} />
-          {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
-          {/* <Stack.Screen name="OTP" component={OTPVerificationScreen} />           */}
-          <Stack.Screen name="Login" component={LoginScreen} />          
-        </Stack.Navigator>
+        <StatusBar translucent backgroundColor="transparent" />
+        {isAuthenticated ? <AppStack /> : <AuthStack />}
       </NavigationContainer>
     </SafeAreaProvider>
   );
