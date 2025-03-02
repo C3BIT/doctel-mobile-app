@@ -1,26 +1,39 @@
+import React, { Suspense, useEffect, useState } from "react";
 import { Provider } from "react-redux";
-import { Suspense, useEffect } from "react";
-// import SplashScreen from "react-native-splash-screen";
+import FlashMessage from "react-native-flash-message";
+import { StatusBar } from "react-native";
 import MainApp from "./MainApp";
 import Loader from "./app/components/common/Loader";
 import store from "./app/redux/store";
-// import { ThemeProvider } from "./context/ThemeProvider";
+import CustomSplashScreen from "./app/screens/SplashScreen";
 
 export default function App() {
-  // useEffect(() => {
-  //   const hideSplashScreen = async () => {
-  //     await new Promise((resolve) => setTimeout(resolve, 300));
-  //     SplashScreen.hide();
-  //   };
+  const [isAppReady, setIsAppReady] = useState(false);
 
-  //   hideSplashScreen();
-  // }, []);
+  useEffect(() => {
+    const splashTimer = setTimeout(() => {
+      setIsAppReady(true);
+    }, 500);
+
+    return () => clearTimeout(splashTimer);
+  }, []);
 
   return (
     <Provider store={store}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
+
+      {!isAppReady ? (
+        <CustomSplashScreen />
+      ) : (
         <Suspense fallback={<Loader />}>
           <MainApp />
+          <FlashMessage position="top" />
         </Suspense>
+      )}
     </Provider>
   );
 }
