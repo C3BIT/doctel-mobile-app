@@ -76,7 +76,7 @@ const patientAuthSlice = createSlice({
       })
       .addCase(patientLogin.rejected, (state, action) => {
         state.verifyLoading = false;
-        state.error = "Login failed";
+        state.error =  "Unable to verify your credentials. Please try again.";
         state.status = "error";
       });
   },

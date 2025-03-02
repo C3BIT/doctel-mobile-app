@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  KeyboardAvoidingView,
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
   StatusBar,
   SafeAreaView,
-  ScrollView,
 } from "react-native";
 import WaveBackground from "../../../components/common/WaveBackground";
 import { useNavigation } from "@react-navigation/native";
@@ -34,27 +32,6 @@ const LoginScreen = () => {
   const dispatch = useDispatch();
   const [mobileNumber, setMobileNumber] = useState("");
   const navigation = useNavigation();
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => {
-        setKeyboardVisible(true);
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => {
-        setKeyboardVisible(false);
-      }
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
 
   const handleContinue = useCallback(() => {
     if (!validatePhoneNumber(mobileNumber)) {
@@ -89,6 +66,13 @@ const LoginScreen = () => {
     Keyboard.dismiss();
   };
 
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      TextInput.defaultProps = TextInput.defaultProps || {};
+      TextInput.defaultProps.scrollEnabled = false;
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
@@ -96,27 +80,15 @@ const LoginScreen = () => {
         backgroundColor="transparent"
         barStyle="light-content"
       />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.mainContainer}
-      >
+      <View style={styles.fixedContainer}>
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
-          <ScrollView
-            contentContainerStyle={styles.scrollView}
-            bounces={false}
-            showsVerticalScrollIndicator={false}
-          >
+          <View style={styles.container}>
             <WaveBackground>
-              <View style={styles.container}>
-                <View
-                  style={[
-                    styles.imageContent,
-
-                  ]}
-                >
+              <View style={styles.contentWrapper}>
+                <View style={styles.imageContent}>
                   <Image
                     source={require("../../../assets/capa.png")}
-                    style={[styles.image]}
+                    style={styles.image}
                     resizeMode="contain"
                   />
                 </View>
@@ -134,6 +106,7 @@ const LoginScreen = () => {
                         maxLength={11}
                         value={mobileNumber}
                         onChangeText={setMobileNumber}
+                        scrollEnabled={false}
                       />
                     </View>
 
@@ -146,72 +119,70 @@ const LoginScreen = () => {
                     </TouchableOpacity>
                   </View>
 
-                  {!keyboardVisible && (
-                    <View style={styles.bottomSection}>
-                      <View style={styles.dividerContainer}>
-                        <View style={styles.divider} />
-                        <Text style={styles.dividerText}>OR</Text>
-                        <View style={styles.divider} />
-                      </View>
-
-                      <View style={styles.socialContainer}>
-                        <TouchableOpacity
-                          style={styles.socialButton}
-                          onPress={() => handleSocialLogin("Facebook")}
-                          activeOpacity={0.7}
-                        >
-                          <Image
-                            source={require("../../../assets/facebook.png")}
-                            style={styles.socialIcon}
-                            resizeMode="contain"
-                          />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={styles.socialButton}
-                          onPress={() => handleSocialLogin("WhatsApp")}
-                          activeOpacity={0.7}
-                        >
-                          <Image
-                            source={require("../../../assets/whatsapp.png")}
-                            style={styles.socialIcon}
-                            resizeMode="contain"
-                          />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={styles.socialButton}
-                          onPress={() => handleSocialLogin("Google")}
-                          activeOpacity={0.7}
-                        >
-                          <Image
-                            source={require("../../../assets/google.png")}
-                            style={styles.socialIcon}
-                            resizeMode="contain"
-                          />
-                        </TouchableOpacity>
-                      </View>
-
-                      <View style={styles.signUpContainer}>
-                        <Text style={styles.noAccountText}>
-                          Don't have an account?
-                        </Text>
-                        <TouchableOpacity
-                          onPress={handleSignUp}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.signUpText}>Sign up</Text>
-                        </TouchableOpacity>
-                      </View>
+                  <View style={styles.bottomSection}>
+                    <View style={styles.dividerContainer}>
+                      <View style={styles.divider} />
+                      <Text style={styles.dividerText}>OR</Text>
+                      <View style={styles.divider} />
                     </View>
-                  )}
+
+                    <View style={styles.socialContainer}>
+                      <TouchableOpacity
+                        style={styles.socialButton}
+                        onPress={() => handleSocialLogin("Facebook")}
+                        activeOpacity={0.7}
+                      >
+                        <Image
+                          source={require("../../../assets/facebook.png")}
+                          style={styles.socialIcon}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.socialButton}
+                        onPress={() => handleSocialLogin("WhatsApp")}
+                        activeOpacity={0.7}
+                      >
+                        <Image
+                          source={require("../../../assets/whatsapp.png")}
+                          style={styles.socialIcon}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.socialButton}
+                        onPress={() => handleSocialLogin("Google")}
+                        activeOpacity={0.7}
+                      >
+                        <Image
+                          source={require("../../../assets/google.png")}
+                          style={styles.socialIcon}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.signUpContainer}>
+                      <Text style={styles.noAccountText}>
+                        Don't have an account?
+                      </Text>
+                      <TouchableOpacity
+                        onPress={handleSignUp}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.signUpText}>Sign up</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
               </View>
               {isLoading && <Loader />}
             </WaveBackground>
-          </ScrollView>
+          </View>
         </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -221,15 +192,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#223972",
   },
-  mainContainer: {
-    flex: 1,
-  },
-  scrollView: {
-    flexGrow: 1,
+  fixedContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
   },
   container: {
     flex: 1,
-    justifyContent: "space-between",
+    position: 'relative',
+  },
+  contentWrapper: {
+    flex: 1,
     paddingTop:
       Platform.OS === "android"
         ? StatusBar.currentHeight + getResponsiveSize(10)
@@ -240,27 +216,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   imageContent: {
-    height: height * 0.35,
+    height: height * 0.3,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: getResponsiveSize(20),
   },
   image: {
-    width: width * 0.7,
-    height: width * 0.7,
-    maxWidth: 300,
-    maxHeight: 300,
+    width: width * 0.6,
+    height: width * 0.6,
   },
   inputSection: {
+    paddingTop: height * 0.02,
     paddingHorizontal: getResponsiveSize(30),
     width: "100%",
     alignSelf: "center",
-    marginBottom: getResponsiveSize(20),
   },
   bottomSection: {
     paddingHorizontal: getResponsiveSize(30),
-    paddingBottom: height * 0.05,
+    paddingBottom: height * 0.1,
     width: "100%",
+    backgroundColor: "transparent",
   },
   signInText: {
     fontSize: getResponsiveSize(24),
@@ -301,7 +275,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    marginBottom: getResponsiveSize(20),
+    marginBottom: getResponsiveSize(15),
   },
   divider: {
     flex: 1,
@@ -334,7 +308,7 @@ const styles = StyleSheet.create({
   signUpContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: getResponsiveSize(20),
+    marginTop: getResponsiveSize(15),
     alignItems: "center",
   },
   noAccountText: {
