@@ -9,11 +9,11 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Keyboard,
   TouchableWithoutFeedback,
   StatusBar,
   SafeAreaView,
+  ScrollView,
 } from "react-native";
 import WaveBackground from "../../../components/common/WaveBackground";
 import { useNavigation } from "@react-navigation/native";
@@ -21,6 +21,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { sendOtp } from "../../../redux/features/auth/patientAuthSlice";
 import Loader from "../../../components/common/Loader";
 import FlashMessage from "../../../components/shared/FlashMessage";
+
+const { width, height } = Dimensions.get("window");
+
+const getResponsiveSize = (size) => {
+  const standardWidth = 375;
+  return (width / standardWidth) * size;
+};
 
 const LoginScreen = () => {
   const { isLoading, status } = useSelector((state) => state.auth);
@@ -31,13 +38,13 @@ const LoginScreen = () => {
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
+      "keyboardDidShow",
       () => {
         setKeyboardVisible(true);
       }
     );
     const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
+      "keyboardDidHide",
       () => {
         setKeyboardVisible(false);
       }
@@ -51,7 +58,7 @@ const LoginScreen = () => {
 
   const handleContinue = useCallback(() => {
     if (!validatePhoneNumber(mobileNumber)) {
-      FlashMessage.error( "Mobile number must be 11 digits and start with 0.")
+      FlashMessage.error("Mobile number must be 11 digits and start with 0.");
       return;
     }
     Keyboard.dismiss();
@@ -84,110 +91,130 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <View style={styles.mainContainer}>
-          <WaveBackground>
-            <View style={styles.container}>
-              <View style={[
-                styles.imageContent
-              ]}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.mainContainer}
+      >
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <ScrollView
+            contentContainerStyle={styles.scrollView}
+            bounces={false}
+            showsVerticalScrollIndicator={false}
+          >
+            <WaveBackground>
+              <View style={styles.container}>
+                <View
+                  style={[
+                    styles.imageContent,
+
+                  ]}
+                >
                   <Image
                     source={require("../../../assets/capa.png")}
-                    style={styles.image}
+                    style={[styles.image]}
                     resizeMode="contain"
                   />
-
-              </View>
-
-              <View style={styles.inputSection}>
-                <Text style={styles.signInText}>Sign In</Text>
-
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Mobile Number"
-                    placeholderTextColor="#8DA1B5"
-                    keyboardType="phone-pad"
-                    maxLength={11}
-                    value={mobileNumber}
-                    onChangeText={setMobileNumber}
-                  />
                 </View>
 
-                <TouchableOpacity
-                  style={styles.continueButton}
-                  onPress={handleContinue}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.continueButtonText}>Continue</Text>
-                </TouchableOpacity>
-              </View>
+                <View style={styles.contentContainer}>
+                  <View style={styles.inputSection}>
+                    <Text style={styles.signInText}>Sign In</Text>
 
-              {!keyboardVisible && (
-                <View style={styles.bottomSection}>
-                  <View style={styles.dividerContainer}>
-                    <View style={styles.divider} />
-                    <Text style={styles.dividerText}>OR</Text>
-                    <View style={styles.divider} />
-                  </View>
-
-                  <View style={styles.socialContainer}>
-                    <TouchableOpacity
-                      style={styles.socialButton}
-                      onPress={() => handleSocialLogin("Facebook")}
-                      activeOpacity={0.7}
-                    >
-                      <Image
-                        source={require("../../../assets/facebook.png")}
-                        style={styles.socialIcon}
-                        resizeMode="contain"
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter Mobile Number"
+                        placeholderTextColor="#8DA1B5"
+                        keyboardType="phone-pad"
+                        maxLength={11}
+                        value={mobileNumber}
+                        onChangeText={setMobileNumber}
                       />
-                    </TouchableOpacity>
+                    </View>
 
                     <TouchableOpacity
-                      style={styles.socialButton}
-                      onPress={() => handleSocialLogin("WhatsApp")}
-                      activeOpacity={0.7}
+                      style={styles.continueButton}
+                      onPress={handleContinue}
+                      activeOpacity={0.8}
                     >
-                      <Image
-                        source={require("../../../assets/whatsapp.png")}
-                        style={styles.socialIcon}
-                        resizeMode="contain"
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.socialButton}
-                      onPress={() => handleSocialLogin("Google")}
-                      activeOpacity={0.7}
-                    >
-                      <Image
-                        source={require("../../../assets/google.png")}
-                        style={styles.socialIcon}
-                        resizeMode="contain"
-                      />
+                      <Text style={styles.continueButtonText}>Continue</Text>
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.signUpContainer}>
-                    <Text style={styles.noAccountText}>Don't have an account?</Text>
-                    <TouchableOpacity onPress={handleSignUp} activeOpacity={0.7}>
-                      <Text style={styles.signUpText}>Sign up</Text>
-                    </TouchableOpacity>
-                  </View>
+                  {!keyboardVisible && (
+                    <View style={styles.bottomSection}>
+                      <View style={styles.dividerContainer}>
+                        <View style={styles.divider} />
+                        <Text style={styles.dividerText}>OR</Text>
+                        <View style={styles.divider} />
+                      </View>
+
+                      <View style={styles.socialContainer}>
+                        <TouchableOpacity
+                          style={styles.socialButton}
+                          onPress={() => handleSocialLogin("Facebook")}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={require("../../../assets/facebook.png")}
+                            style={styles.socialIcon}
+                            resizeMode="contain"
+                          />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.socialButton}
+                          onPress={() => handleSocialLogin("WhatsApp")}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={require("../../../assets/whatsapp.png")}
+                            style={styles.socialIcon}
+                            resizeMode="contain"
+                          />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.socialButton}
+                          onPress={() => handleSocialLogin("Google")}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={require("../../../assets/google.png")}
+                            style={styles.socialIcon}
+                            resizeMode="contain"
+                          />
+                        </TouchableOpacity>
+                      </View>
+
+                      <View style={styles.signUpContainer}>
+                        <Text style={styles.noAccountText}>
+                          Don't have an account?
+                        </Text>
+                        <TouchableOpacity
+                          onPress={handleSignUp}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.signUpText}>Sign up</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
-            {isLoading && <Loader />}
-          </WaveBackground>
-        </View>
-      </TouchableWithoutFeedback>
+              </View>
+              {isLoading && <Loader />}
+            </WaveBackground>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
-
-const { width, height } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -197,115 +224,128 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
   },
+  scrollView: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     justifyContent: "space-between",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    paddingTop:
+      Platform.OS === "android"
+        ? StatusBar.currentHeight + getResponsiveSize(10)
+        : getResponsiveSize(10),
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "space-between",
   },
   imageContent: {
-    height: height * 0.4,
+    height: height * 0.35,
     alignItems: "center",
     justifyContent: "center",
-  },
-  imageContentSmall: {
-    height: height * 0.1,
+    paddingTop: getResponsiveSize(20),
   },
   image: {
     width: width * 0.7,
     height: width * 0.7,
+    maxWidth: 300,
+    maxHeight: 300,
   },
   inputSection: {
-    paddingHorizontal: 30,
-    position: "absolute",
-    top: height * 0.45,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+    paddingHorizontal: getResponsiveSize(30),
+    width: "100%",
+    alignSelf: "center",
+    marginBottom: getResponsiveSize(20),
   },
   bottomSection: {
-    paddingHorizontal: 30,
-    paddingBottom: height * 0.15,
+    paddingHorizontal: getResponsiveSize(30),
+    paddingBottom: height * 0.05,
+    width: "100%",
   },
   signInText: {
-    fontSize: 24,
+    fontSize: getResponsiveSize(24),
     color: "white",
     fontWeight: "500",
-    marginBottom: 20,
+    marginBottom: getResponsiveSize(20),
     textAlign: "center",
   },
   inputContainer: {
     width: "100%",
-    marginBottom: 15,
+    marginBottom: getResponsiveSize(15),
   },
   input: {
     backgroundColor: "rgba(255, 255, 255, 0.85)",
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
+    borderRadius: getResponsiveSize(8),
+    padding: getResponsiveSize(15),
+    fontSize: getResponsiveSize(16),
     width: "100%",
     color: "#223972",
+    height: getResponsiveSize(50),
   },
   continueButton: {
     backgroundColor: "#223972",
-    borderRadius: 8,
-    padding: 15,
+    borderRadius: getResponsiveSize(8),
+    padding: getResponsiveSize(15),
     width: "100%",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: getResponsiveSize(20),
+    height: getResponsiveSize(50),
+    justifyContent: "center",
   },
   continueButtonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: getResponsiveSize(16),
     fontWeight: "bold",
   },
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    marginBottom: 20,
+    marginBottom: getResponsiveSize(20),
   },
   divider: {
     flex: 1,
-    height: 2,
+    height: getResponsiveSize(2),
     backgroundColor: "#223972",
   },
   dividerText: {
     color: "#223972",
-    paddingHorizontal: 10,
+    paddingHorizontal: getResponsiveSize(10),
     fontWeight: "400",
-    fontSize: 14,
+    fontSize: getResponsiveSize(14),
   },
   socialContainer: {
     flexDirection: "row",
     justifyContent: "center",
     width: "100%",
-    marginVertical: 5,
+    marginVertical: getResponsiveSize(5),
   },
   socialButton: {
-    width: 40,
-    height: 40,
-    marginHorizontal: 5,
+    width: getResponsiveSize(40),
+    height: getResponsiveSize(40),
+    marginHorizontal: getResponsiveSize(5),
     justifyContent: "center",
     alignItems: "center",
   },
   socialIcon: {
-    width: 40,
-    height: 40,
+    width: getResponsiveSize(40),
+    height: getResponsiveSize(40),
   },
   signUpContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: getResponsiveSize(20),
+    alignItems: "center",
   },
   noAccountText: {
     color: "white",
-    marginRight: 5,
-    fontSize: 16,
+    marginRight: getResponsiveSize(5),
+    fontSize: getResponsiveSize(14),
     fontWeight: "400",
   },
   signUpText: {
     color: "#223972",
-    fontSize: 18,
+    fontSize: getResponsiveSize(16),
     fontWeight: "700",
   },
 });
