@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -10,6 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+  StatusBar,
+  SafeAreaView,
 } from "react-native";
 import WaveBackground from "../../../components/common/WaveBackground";
 import { useNavigation } from "@react-navigation/native";
@@ -18,25 +22,33 @@ import { sendOtp } from "../../../redux/features/auth/patientAuthSlice";
 import Loader from "../../../components/common/Loader";
 
 const LoginScreen = () => {
-  const {isLoading, status } = useSelector(
-    (state) => state.auth
-  );
+  const { isLoading, status } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [mobileNumber, setMobileNumber] = useState("");
   const navigation = useNavigation();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
-    if (status === "otp_sent") {
-      navigation.navigate("OTP", { phone: mobileNumber });
-    }
-  }, [status, navigation, mobileNumber]);
-  
-  const validatePhoneNumber = (number) => {
-    const phoneRegex = /^0\d{10}$/;
-    return phoneRegex.test(number);
-  };
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
 
-  const handleContinue = () => {
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  const handleContinue = useCallback(() => {
     if (!validatePhoneNumber(mobileNumber)) {
       Alert.alert(
         "Invalid Number",
@@ -44,135 +56,177 @@ const LoginScreen = () => {
       );
       return;
     }
+    Keyboard.dismiss();
     dispatch(sendOtp({ phone: mobileNumber }));
-    console.log("Continue pressed with mobile number:", mobileNumber);
-  };
+  }, [mobileNumber, dispatch]);
 
-  const handleSocialLogin = (platform) => {
+  const handleSocialLogin = useCallback((platform) => {
     console.log(`${platform} login pressed`);
+  }, []);
+
+  const handleSignUp = useCallback(() => {
+    Keyboard.dismiss();
+    navigation.navigate("SignUpScreen");
+  }, [navigation]);
+
+  useEffect(() => {
+    if (status === "otp_sent") {
+      navigation.navigate("OTP", { phone: mobileNumber });
+    }
+  }, [status, navigation, mobileNumber]);
+
+  const validatePhoneNumber = (number) => {
+    const phoneRegex = /^0\d{10}$/;
+    return phoneRegex.test(number);
   };
 
-  const handleSignUp = () => {
-    console.log("Sign up pressed");
-    navigation.navigate("SignUpScreen");
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
   };
 
   return (
-    <WaveBackground>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
-      >
-        { isLoading && <Loader />}
-        <View style={styles.container}>
-          <View style={styles.imageContent}>
-            <Image
-              source={require("../../../assets/capa.png")}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <View style={styles.mainContainer}>
+          <WaveBackground>
+            <View style={styles.container}>
+              <View style={[
+                styles.imageContent
+              ]}>
+                  <Image
+                    source={require("../../../assets/capa.png")}
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
 
-          <View style={styles.content}>
-            <Text style={styles.signInText}>Sign In</Text>
+              </View>
 
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Mobile Number"
-                placeholderTextColor="#8DA1B5"
-                keyboardType="phone-pad"
-                maxLength={11}
-                value={mobileNumber}
-                onChangeText={setMobileNumber}
-              />
+              <View style={styles.inputSection}>
+                <Text style={styles.signInText}>Sign In</Text>
+
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Mobile Number"
+                    placeholderTextColor="#8DA1B5"
+                    keyboardType="phone-pad"
+                    maxLength={11}
+                    value={mobileNumber}
+                    onChangeText={setMobileNumber}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={handleContinue}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                </TouchableOpacity>
+              </View>
+
+              {!keyboardVisible && (
+                <View style={styles.bottomSection}>
+                  <View style={styles.dividerContainer}>
+                    <View style={styles.divider} />
+                    <Text style={styles.dividerText}>OR</Text>
+                    <View style={styles.divider} />
+                  </View>
+
+                  <View style={styles.socialContainer}>
+                    <TouchableOpacity
+                      style={styles.socialButton}
+                      onPress={() => handleSocialLogin("Facebook")}
+                      activeOpacity={0.7}
+                    >
+                      <Image
+                        source={require("../../../assets/facebook.png")}
+                        style={styles.socialIcon}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.socialButton}
+                      onPress={() => handleSocialLogin("WhatsApp")}
+                      activeOpacity={0.7}
+                    >
+                      <Image
+                        source={require("../../../assets/whatsapp.png")}
+                        style={styles.socialIcon}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.socialButton}
+                      onPress={() => handleSocialLogin("Google")}
+                      activeOpacity={0.7}
+                    >
+                      <Image
+                        source={require("../../../assets/google.png")}
+                        style={styles.socialIcon}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.signUpContainer}>
+                    <Text style={styles.noAccountText}>Don't have an account?</Text>
+                    <TouchableOpacity onPress={handleSignUp} activeOpacity={0.7}>
+                      <Text style={styles.signUpText}>Sign up</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </View>
-
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
-            </TouchableOpacity>
-
-            <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.divider} />
-            </View>
-
-            <View style={styles.socialContainer}>
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin("Facebook")}
-              >
-                <Image
-                  source={require("../../../assets/facebook.png")}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin("WhatsApp")}
-              >
-                <Image
-                  source={require("../../../assets/whatsapp.png")}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin("Google")}
-              >
-                <Image
-                  source={require("../../../assets/google.png")}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.signUpContainer}>
-              <Text style={styles.noAccountText}>Don't have an account?</Text>
-              <TouchableOpacity onPress={handleSignUp}>
-                <Text style={styles.signUpText}>Sign up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+            {isLoading && <Loader />}
+          </WaveBackground>
         </View>
-      </KeyboardAvoidingView>
-    </WaveBackground>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 };
 
 const { width, height } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
-  keyboardAvoidingView: {
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#223972",
+  },
+  mainContainer: {
     flex: 1,
   },
   container: {
     flex: 1,
     justifyContent: "space-between",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   imageContent: {
-    height: height * 0.5,
+    height: height * 0.4,
     alignItems: "center",
     justifyContent: "center",
   },
-  image: {
-    width: width * 0.8,
-    height: width * 0.8,
+  imageContentSmall: {
+    height: height * 0.1,
   },
-  content: {
-    flex: 1,
+  image: {
+    width: width * 0.7,
+    height: width * 0.7,
+  },
+  inputSection: {
     paddingHorizontal: 30,
-    paddingBottom: 40,
-    justifyContent: "center",
+    position: "absolute",
+    top: height * 0.45,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  bottomSection: {
+    paddingHorizontal: 30,
+    paddingBottom: 30,
   },
   signInText: {
     fontSize: 24,
@@ -204,7 +258,6 @@ const styles = StyleSheet.create({
   continueButtonText: {
     color: "white",
     fontSize: 18,
-    fontWeight: "700",
     fontWeight: "bold",
   },
   dividerContainer: {
@@ -228,7 +281,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     width: "100%",
-    marginVertical: 15,
+    marginVertical: 5,
   },
   socialButton: {
     width: 40,
@@ -259,4 +312,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default React.memo(LoginScreen);
