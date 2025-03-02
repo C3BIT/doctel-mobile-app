@@ -20,6 +20,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { sendOtp } from "../../../redux/features/auth/patientAuthSlice";
 import Loader from "../../../components/common/Loader";
+import FlashMessage from "../../../components/shared/FlashMessage";
 
 const LoginScreen = () => {
   const { isLoading, status } = useSelector((state) => state.auth);
@@ -50,10 +51,7 @@ const LoginScreen = () => {
 
   const handleContinue = useCallback(() => {
     if (!validatePhoneNumber(mobileNumber)) {
-      Alert.alert(
-        "Invalid Number",
-        "Mobile number must be 11 digits and start with 0."
-      );
+      FlashMessage.error( "Mobile number must be 11 digits and start with 0.")
       return;
     }
     Keyboard.dismiss();

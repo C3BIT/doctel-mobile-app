@@ -18,6 +18,7 @@ import WaveBackground from "../../../components/common/WaveBackground";
 import Loader from "../../../components/common/Loader";
 
 import { patientLogin } from "../../../redux/features/auth/patientAuthSlice";
+import FlashMessage from "../../../components/shared/FlashMessage";
 
 const { width, height } = Dimensions.get('window');
 const OTP_LENGTH = 4;
@@ -29,7 +30,7 @@ const OTPVerificationScreen = () => {
   
   const inputRefs = useRef(Array(OTP_LENGTH).fill(null).map(() => React.createRef()));
   
-  const { verifyLoading } = useSelector((state) => state.auth);
+  const { verifyLoading, error, status } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   
   const route = useRoute();
@@ -49,6 +50,11 @@ const OTPVerificationScreen = () => {
     return () => clearInterval(timerInterval);
   }, []);
 
+    useEffect(() => {
+      if (status === "error") {
+        FlashMessage.error(error || "Something went wrong!")
+      }
+    }, [status]);
   const handleChangeText = (value, index) => {
     if (/^[0-9]?$/.test(value)) {
       const newOtp = [...otp];
@@ -69,7 +75,6 @@ const OTPVerificationScreen = () => {
 
   const handleVerify = () => {
     const enteredOtp = otp.join("");
-    console.log("=============otp============", enteredOtp,phone);
     if (enteredOtp.length === OTP_LENGTH) {
       dispatch(patientLogin({
         otp: enteredOtp,

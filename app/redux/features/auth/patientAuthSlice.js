@@ -76,7 +76,7 @@ const patientAuthSlice = createSlice({
       })
       .addCase(patientLogin.rejected, (state, action) => {
         state.verifyLoading = false;
-        state.error = action.payload.message || "Login failed";
+        state.error = "Login failed";
         state.status = "error";
       });
   },

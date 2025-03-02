@@ -23,7 +23,7 @@ export default function App() {
       setTimeout(() => {
         setIsAppReady(true);
       }, 800);
-    }, 2000); 
+    }, 1000); 
 
     return () => clearTimeout(splashTimer);
   }, []);
