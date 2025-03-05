@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-  SafeAreaView,
+  ScrollView,
   Platform,
 } from "react-native";
 import CustomLanguageSwitch from "../components/common/CustomLanguageSwitch";
@@ -50,7 +50,7 @@ const HomeScreen = () => {
         </View>
       </View>
 
-      <View style={styles.appoinmentContainer}>
+      <View style={styles.appointmentContainer}>
         <TouchableOpacity style={styles.appointmentButton}>
           <View style={styles.appointmentContent}>
             <View style={styles.iconContainer}>
@@ -69,9 +69,10 @@ const HomeScreen = () => {
           </View>
         </TouchableOpacity>
       </View>
-      <View style={styles.contentContainer}>
+
+      <ScrollView style={styles.contentContainer}>
         <CallFeature />
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -132,8 +133,7 @@ const styles = StyleSheet.create({
   wellnessCardContainer: {
     paddingHorizontal: dynamicWidth(5),
   },
-  appoinmentContainer: {
-    flex: 1,
+  appointmentContainer: {
     backgroundColor: "#FFFFFF",
     padding: dynamicWidth(4),
   },
@@ -146,7 +146,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#192F5D",
     borderRadius: 12,
     padding: dynamicWidth(4),
-    marginBottom: dynamicHeight(2),
   },
   appointmentContent: {
     flexDirection: "row",
