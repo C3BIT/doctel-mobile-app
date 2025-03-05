@@ -74,6 +74,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#20ACE2",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    paddingBottom: dynamicHeight(2),
     overflow: "hidden",
   },
   header: {

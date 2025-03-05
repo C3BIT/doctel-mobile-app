@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const dynamicWidth = (percentage) => (width * percentage) / 100;
+const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
 const WellnessCard = () => {
@@ -43,11 +44,13 @@ const styles = StyleSheet.create({
   },
   wellnessBox: {
     width: '35%',
+    height: dynamicHeight(15),
     backgroundColor: '#00B0ED',
     borderRadius: 12,
-    padding: dynamicWidth(4),
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: dynamicWidth(2),
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    position: 'relative',
   },
   wellnessLabel: {
     color: '#fff',
@@ -62,11 +65,14 @@ const styles = StyleSheet.create({
   wellnessImage: {
     width: dynamicWidth(18),
     height: dynamicWidth(18),
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
   },
   wellnessDetails: {
     flex: 1,
     paddingLeft: dynamicWidth(4),
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
   },
   testHeader: {
     flexDirection: 'row',
@@ -75,22 +81,22 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   testTitle: {
-    color: '#00B0ED',
+    color: '#20ACE2',
     fontWeight: 'bold',
     fontSize: dynamicFontSize(14),
   },
   testScore: {
-    color: '#00B0ED',
+    color: '#20ACE2',
     fontWeight: 'bold',
     fontSize: dynamicFontSize(14),
   },
   testDescription: {
-    color: '#666',
+    color: 'Gray',
     fontSize: dynamicFontSize(12),
     marginBottom: 5,
   },
   moreDetails: {
-    color: '#00B0ED',
+    color: '#20ACE2',
     fontSize: dynamicFontSize(12),
     textDecorationLine: 'underline',
   },
