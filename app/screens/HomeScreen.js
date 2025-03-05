@@ -34,14 +34,16 @@ const HomeScreen = () => {
         <View style={styles.horizontalLine} />
 
         <View style={styles.headerContent}>
-          <Text style={styles.question}>How are you feeling today?</Text>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.question}>How are you feeling today?</Text>
+          </View>
+          <Image
+            source={require("../assets/leaves.png")}
+            style={styles.leavesImage}
+            resizeMode="contain"
+          />
         </View>
 
-        <Image
-          source={require("../assets/leaves.png")}
-          style={styles.leavesBackground}
-          resizeMode="contain"
-        />
         <View style={styles.wellnessCardContainer}>
           <WellnessCard />
         </View>
@@ -91,9 +93,9 @@ const styles = StyleSheet.create({
     height: dynamicHeight(8),
   },
   horizontalLine: {
-    width: "100%", 
+    width: "100%",
     height: 1,
-    backgroundColor: "#0A4E52", 
+    backgroundColor: "#0A4E52",
     opacity: 0.3,
     marginTop: dynamicHeight(2),
   },
@@ -102,51 +104,29 @@ const styles = StyleSheet.create({
     height: dynamicHeight(6),
   },
   headerContent: {
-    paddingHorizontal: dynamicWidth(5),
-    paddingBottom: dynamicHeight(2),
-  },
-  question: {
-    color: "#fff",
-    fontSize: dynamicFontSize(18),
-    fontWeight: "500",
-    marginBottom: dynamicHeight(2),
-  },
-  wellnessCardContainer: {
-    paddingHorizontal: dynamicWidth(5),
-  },
-  testHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: dynamicHeight(0.5),
+    top: dynamicHeight(1),
+    height: dynamicHeight(8),
+    paddingHorizontal: dynamicWidth(5),
   },
-  testTitle: {
-    color: "#00B0ED",
-    fontWeight: "bold",
-    fontSize: dynamicFontSize(14),
+  headerTextContainer: {
+    flex: 1,
+    justifyContent: "center",
   },
-  testScore: {
-    color: "#00B0ED",
-    fontWeight: "bold",
-    fontSize: dynamicFontSize(14),
+  question: {
+    color: "#FFFFFF",
+    fontSize: dynamicFontSize(18),
+    textAlign: "left",
   },
-  testDescription: {
-    color: "#666",
-    fontSize: dynamicFontSize(12),
-    marginBottom: dynamicHeight(1),
-  },
-  moreDetails: {
-    color: "#00B0ED",
-    fontSize: dynamicFontSize(12),
-    textDecorationLine: "underline",
-  },
-  leavesBackground: {
-    position: "absolute",
-    right: 0,
-    top: dynamicHeight(10),
+  leavesImage: {
     width: dynamicWidth(30),
-    height: dynamicHeight(15),
+    height: dynamicHeight(25),
     opacity: 0.7,
+  },
+  wellnessCardContainer: {
+    paddingHorizontal: dynamicWidth(5),
   },
   contentContainer: {
     flex: 1,
