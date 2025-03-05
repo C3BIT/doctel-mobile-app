@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import CustomLanguageSwitch from "../components/common/CustomLanguageSwitch";
 import WellnessCard from "../components/common/WellnessCard";
+import CallFeature from "../components/common/CallFeature";
 
 const { width, height } = Dimensions.get("window");
 
@@ -49,7 +50,7 @@ const HomeScreen = () => {
         </View>
       </View>
 
-      <View style={styles.contentContainer}>
+      <View style={styles.appoinmentContainer}>
         <TouchableOpacity style={styles.appointmentButton}>
           <View style={styles.appointmentContent}>
             <View style={styles.iconContainer}>
@@ -67,6 +68,9 @@ const HomeScreen = () => {
             </View>
           </View>
         </TouchableOpacity>
+      </View>
+      <View style={styles.contentContainer}>
+        <CallFeature />
       </View>
     </View>
   );
@@ -127,6 +131,11 @@ const styles = StyleSheet.create({
   },
   wellnessCardContainer: {
     paddingHorizontal: dynamicWidth(5),
+  },
+  appoinmentContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    padding: dynamicWidth(4),
   },
   contentContainer: {
     flex: 1,
