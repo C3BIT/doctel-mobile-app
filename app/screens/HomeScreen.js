@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,69 +13,101 @@ import {
 
 const { width, height } = Dimensions.get('window');
 
+// Dynamic sizing functions for responsive design
 const dynamicWidth = (percentage) => (width * percentage) / 100;
 const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
 const HomeScreen = () => {
+  const [selectedLanguage, setSelectedLanguage] = useState('EN');
+
+  const handleLanguageChange = (language) => {
+    setSelectedLanguage(language);
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Image 
-            source={require('../assets/doctel.png')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#20ACE2" />
         
-        <View style={styles.languageSelector}>
-          <TouchableOpacity style={[styles.languageButton, styles.activeLanguage]}>
-            <Text style={styles.languageText}>EN</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.languageButton}>
-            <Text style={styles.languageTextInactive}>FR</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <View style={styles.content}>
-        <Text style={styles.question}>
-          How are you feeling today?
-        </Text>
-        
-        <View style={styles.wellnessCard}>
-          <View style={styles.cardContent}>
-            <View style={styles.scoreSection}>
-              <Text style={styles.scoreLabel}>Wellness Score</Text>
-              <Text style={styles.scoreValue}>100</Text>
-              <Image 
-                source={require('../assets/wellness.png')} 
-                style={styles.wellnessIllustration}
-                resizeMode="contain"
-              />
-            </View>
-            
-            <View style={styles.testSection}>
-              <View style={styles.testHeader}>
-                <Text style={styles.testTitle}>WELLNESS TEST</Text>
-                <Text style={styles.testScore}>8/10</Text>
-              </View>
-              <Text style={styles.testDescription}>
-                Lets do all the tests and update score
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>DOCTEL</Text>
+          </View>
+          
+          <View style={styles.languageSelector}>
+            <TouchableOpacity 
+              style={[
+                styles.languageButton, 
+                selectedLanguage === 'EN' && styles.activeLanguage
+              ]}
+              onPress={() => handleLanguageChange('EN')}
+            >
+              <Text style={[
+                styles.languageText, 
+                selectedLanguage === 'EN' ? styles.activeLanguageText : styles.inactiveLanguageText
+              ]}>
+                EN
               </Text>
-              <TouchableOpacity>
-                <Text style={styles.moreDetails}>More Details</Text>
-              </TouchableOpacity>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[
+                styles.languageButton, 
+                selectedLanguage === 'BN' && styles.activeLanguage
+              ]}
+              onPress={() => handleLanguageChange('BN')}
+            >
+              <Text style={[
+                styles.languageText, 
+                selectedLanguage === 'BN' ? styles.activeLanguageText : styles.inactiveLanguageText
+              ]}>
+                BN
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.headerContent}>
+          <Text style={styles.question}>
+            How are you feeling today?
+          </Text>
+
+          <View style={styles.wellnessCard}>
+            <View style={styles.cardContent}>
+              <View style={styles.scoreSection}>
+                <Text style={styles.scoreLabel}>Wellness Score</Text>
+                <Text style={styles.scoreValue}>100</Text>
+              </View>
+              
+              <View style={styles.testSection}>
+                <View style={styles.testHeader}>
+                  <Text style={styles.testTitle}>WELLNESS TEST</Text>
+                  <Text style={styles.testScore}>8/10</Text>
+                </View>
+                <Text style={styles.testDescription}>
+                  Lets do all the tests and update score
+                </Text>
+                <TouchableOpacity>
+                  <Text style={styles.moreDetails}>More Details</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
-        
-        {/* <TouchableOpacity style={styles.appointmentButton}>
+
+        <Image 
+          source={require('../assets/leaves.png')} 
+          style={styles.leavesBackground}
+          resizeMode="contain"
+        />
+      </View>
+
+      <View style={styles.contentContainer}>
+      <TouchableOpacity style={styles.appointmentButton}>
           <View style={styles.appointmentContent}>
             <View style={styles.iconContainer}>
               <Image 
-                source={require('../assets/calendar-icon.png')} 
+                source={require('../assets/calender.png')} 
                 style={styles.calendarIcon}
                 resizeMode="contain"
               />
@@ -86,37 +118,38 @@ const HomeScreen = () => {
             </View>
           </View>
         </TouchableOpacity>
-        
-        <Image 
-          source={require('../assets/plant-decoration.png')} 
-          style={styles.plantDecoration}
-          resizeMode="contain"
-        /> */}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  headerContainer: {
     backgroundColor: '#20ACE2',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: dynamicWidth(15),
-    paddingTop: Platform.OS === 'android' ? dynamicHeight(2) : 0,
+    paddingHorizontal: dynamicWidth(5),
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     height: dynamicHeight(8),
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logo: {
-    width: dynamicWidth(30),
-    height: dynamicHeight(3),
+  logoText: {
+    color: '#FFFFFF',
+    fontSize: dynamicFontSize(18),
+    fontWeight: 'bold',
   },
   languageSelector: {
     flexDirection: 'row',
@@ -130,22 +163,21 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   activeLanguage: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
   },
   languageText: {
-    color: '#00B0ED',
+    fontSize: dynamicFontSize(14),
     fontWeight: '600',
-    fontSize: dynamicFontSize(14),
   },
-  languageTextInactive: {
-    color: '#fff',
-    fontWeight: '500',
-    fontSize: dynamicFontSize(14),
+  activeLanguageText: {
+    color: '#00B0ED',
   },
-  content: {
-    flex: 1,
+  inactiveLanguageText: {
+    color: '#FFFFFF',
+  },
+  headerContent: {
     paddingHorizontal: dynamicWidth(5),
-    paddingTop: dynamicHeight(2),
+    paddingBottom: dynamicHeight(2),
   },
   question: {
     color: '#fff',
@@ -154,7 +186,7 @@ const styles = StyleSheet.create({
     marginBottom: dynamicHeight(2),
   },
   wellnessCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: dynamicWidth(4),
     shadowColor: '#000',
@@ -162,7 +194,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginBottom: dynamicHeight(2),
   },
   cardContent: {
     flexDirection: 'row',
@@ -182,11 +213,6 @@ const styles = StyleSheet.create({
     fontSize: dynamicFontSize(28),
     fontWeight: 'bold',
     color: '#333',
-  },
-  wellnessIllustration: {
-    width: dynamicWidth(20),
-    height: dynamicHeight(10),
-    marginTop: dynamicHeight(1),
   },
   testSection: {
     width: '60%',
@@ -217,6 +243,19 @@ const styles = StyleSheet.create({
     color: '#00B0ED',
     fontSize: dynamicFontSize(12),
     textDecorationLine: 'underline',
+  },
+  leavesBackground: {
+    position: 'absolute',
+    right: 0,
+    top: dynamicHeight(10),
+    width: dynamicWidth(30),
+    height: dynamicHeight(15),
+    opacity: 0.7,
+  },
+  contentContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    padding: dynamicWidth(4),
   },
   appointmentButton: {
     backgroundColor: '#192F5D',
@@ -251,14 +290,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     fontSize: dynamicFontSize(12),
     marginTop: dynamicHeight(0.5),
-  },
-  plantDecoration: {
-    position: 'absolute',
-    right: 0,
-    top: dynamicHeight(10),
-    width: dynamicWidth(25),
-    height: dynamicHeight(20),
-    opacity: 0.7,
   },
 });
 
