@@ -54,7 +54,7 @@ const PackageScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" />
 
       <SafeAreaView
         style={[styles.headerContainer, { paddingTop: statusBarHeight }]}
