@@ -24,9 +24,14 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <View style={styles.header}>
-          <Text style={styles.logoText}>DOCTEL</Text>
+          <Image
+            source={require("../assets/headerLogo.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <CustomLanguageSwitch />
         </View>
+        <View style={styles.horizontalLine} />
 
         <View style={styles.headerContent}>
           <Text style={styles.question}>How are you feeling today?</Text>
@@ -85,10 +90,16 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     height: dynamicHeight(8),
   },
-  logoText: {
-    color: "#FFFFFF",
-    fontSize: dynamicFontSize(18),
-    fontWeight: "bold",
+  horizontalLine: {
+    width: "100%", 
+    height: 1,
+    backgroundColor: "#0A4E52", 
+    opacity: 0.3,
+    marginTop: dynamicHeight(2),
+  },
+  logoImage: {
+    width: dynamicWidth(60),
+    height: dynamicHeight(6),
   },
   headerContent: {
     paddingHorizontal: dynamicWidth(5),
