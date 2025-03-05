@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   Platform,
 } from 'react-native';
+import CustomLanguageSwitch from '../components/common/CustomLanguageSwitch';
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,52 +20,17 @@ const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
 const HomeScreen = () => {
-  const [selectedLanguage, setSelectedLanguage] = useState('EN');
-
-  const handleLanguageChange = (language) => {
-    setSelectedLanguage(language);
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <StatusBar barStyle="light-content" backgroundColor="#20ACE2" />
+        {/* <StatusBar barStyle="light-content" backgroundColor="#20ACE2" /> */}
         
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Text style={styles.logoText}>DOCTEL</Text>
           </View>
           
-          <View style={styles.languageSelector}>
-            <TouchableOpacity 
-              style={[
-                styles.languageButton, 
-                selectedLanguage === 'EN' && styles.activeLanguage
-              ]}
-              onPress={() => handleLanguageChange('EN')}
-            >
-              <Text style={[
-                styles.languageText, 
-                selectedLanguage === 'EN' ? styles.activeLanguageText : styles.inactiveLanguageText
-              ]}>
-                EN
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[
-                styles.languageButton, 
-                selectedLanguage === 'BN' && styles.activeLanguage
-              ]}
-              onPress={() => handleLanguageChange('BN')}
-            >
-              <Text style={[
-                styles.languageText, 
-                selectedLanguage === 'BN' ? styles.activeLanguageText : styles.inactiveLanguageText
-              ]}>
-                BN
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <CustomLanguageSwitch />
         </View>
 
         <View style={styles.headerContent}>
@@ -150,30 +116,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: dynamicFontSize(18),
     fontWeight: 'bold',
-  },
-  languageSelector: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
-    padding: 2,
-  },
-  languageButton: {
-    paddingHorizontal: dynamicWidth(2),
-    paddingVertical: dynamicHeight(0.5),
-    borderRadius: 20,
-  },
-  activeLanguage: {
-    backgroundColor: '#FFFFFF',
-  },
-  languageText: {
-    fontSize: dynamicFontSize(14),
-    fontWeight: '600',
-  },
-  activeLanguageText: {
-    color: '#00B0ED',
-  },
-  inactiveLanguageText: {
-    color: '#FFFFFF',
   },
   headerContent: {
     paddingHorizontal: dynamicWidth(5),
