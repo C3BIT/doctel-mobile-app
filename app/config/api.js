@@ -1,0 +1,1 @@
+export const api = "https://api.bloomattires.com/api";
