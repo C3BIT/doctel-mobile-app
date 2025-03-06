@@ -47,7 +47,7 @@ const MainApp = () => {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar translucent backgroundColor="transparent" />
-        {!isAuthenticated ? <AppStack /> : <AuthStack />}
+        {isAuthenticated ? <AppStack /> : <AuthStack />}
       </NavigationContainer>
     </SafeAreaProvider>
   );
