@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { publicPost } from '../../../utils/apiCaller';
-import { getUserData, removeUserData } from "../../../storage/storage";
+import { getUserData, removeUserData, saveUserData } from "../../../storage/storage";
 
 export const sendOtp = createAsyncThunk(
   "patient/sendOtp",
@@ -71,7 +71,8 @@ const patientAuthSlice = createSlice({
         state.status = "logging_in";
       })
       .addCase(patientLogin.fulfilled, (state, action) => {
-        const { user, token, phone } = action.payload;
+        console.log(action.payload)
+        const { token, phone, user } = action.payload;
         state.verifyLoading = false;
         state.isAuthenticated = true;
         state.user = user;
