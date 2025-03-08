@@ -12,6 +12,7 @@ import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationSc
 import PackageScreen from "./app/screens/PackageScreen";
 import { ProfileScreen } from "./app/screens/ProfileScreen";
 import TabNavigator from "./app/components/shared/TabNavigator";
+import { WebSocketProvider } from "./app/providers/WebSocketProvider";
 
 enableScreens();
 
@@ -45,10 +46,12 @@ const MainApp = () => {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar translucent backgroundColor="transparent" />
-        {isAuthenticated ? <AppStack /> : <AuthStack />}
-      </NavigationContainer>
+      <WebSocketProvider>
+        <NavigationContainer>
+          <StatusBar translucent backgroundColor="transparent" />
+          {isAuthenticated ? <AppStack /> : <AuthStack />}
+        </NavigationContainer>
+      </WebSocketProvider>
     </SafeAreaProvider>
   );
 };
