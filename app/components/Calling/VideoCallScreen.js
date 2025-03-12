@@ -11,10 +11,11 @@ import {
   Platform,
   StatusBar,
   Alert,
+  AppState,
 } from 'react-native';
-import { JitsiMeeting } from '@jitsi/react-native-sdk';
 import WaveBackground from '../common/WaveBackground';
 import { useWebSocket } from '../../providers/WebSocketProvider';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,13 +23,13 @@ const { width, height } = Dimensions.get('window');
 const scale = size => (width / 375) * size;
 const verticalScale = size => (height / 812) * size;
 
-const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
+const VideoCallScreen = ({ visible, onClose }) => {
   const [callStatus, setCallStatus] = useState('connecting');
-  const [jitsiUrl, setJitsiUrl] = useState('');
-  const [showJitsi, setShowJitsi] = useState(false);
+  const [jitsiRoomName, setJitsiRoomName] = useState(''); 
   const { socket } = useWebSocket();
   const callTimeoutRef = useRef(null);
-  const jitsiMeetingRef = useRef(null);
+  const [doctorInfo, setDoctorInfo] = useState({});
+  const navigation = useNavigation();
 
   // Initialize call when modal becomes visible
   useEffect(() => {
@@ -59,16 +60,41 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
 
     const handleInitiated = (data) => {
       console.log('Call initiated:', data);
-      setJitsiUrl(data.jitsiRoom);
+      if (data.jitsiRoom) {
+        const roomUrl = data.jitsiRoom;
+        let roomName;
+        
+        if (roomUrl.includes('/')) {
+          roomName = roomUrl.split('/').pop();
+          roomName = roomName.split('#')[0];
+          roomName = roomName.split('?')[0];
+        } else {
+          roomName = roomUrl;
+        }
+        
+        console.log('Extracted room name:', roomName);
+        setJitsiRoomName(roomName);
+      } else {
+        console.error('No Jitsi room provided in call initiation data');
+      }
     };
 
     const handleAccepted = (data) => {
       console.log('Call accepted by doctor:', data);
+      setDoctorInfo(data);
       if (callTimeoutRef.current) {
         clearTimeout(callTimeoutRef.current);
       }
       setCallStatus('accepted');
-      setShowJitsi(true);
+      
+      // Navigate to the JitsiMeeting screen instead of showing it in a modal
+      if (jitsiRoomName) {
+        handleClose();
+        navigation.navigate('JitsiMeeting', { 
+          room: jitsiRoomName,
+          doctorInfo: data
+        });
+      }
     };
 
     const handleFailed = (data) => {
@@ -77,11 +103,11 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
         clearTimeout(callTimeoutRef.current);
       }
       setCallStatus('failed');
-    //   Alert.alert(
-    //     'Call Failed',
-    //     data.message || 'Unable to connect with a doctor. Please try again later.',
-    //     [{ text: 'OK', onPress: handleClose }]
-    //   );
+      Alert.alert(
+        'Call Failed',
+        data?.message || 'Unable to connect with a doctor. Please try again later.',
+        [{ text: 'OK', onPress: handleClose }]
+      );
     };
 
     const handleDoctorDisconnected = (data) => {
@@ -104,7 +130,7 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
       socket.off('call:failed', handleFailed);
       socket.off('doctor:disconnected', handleDoctorDisconnected);
     };
-  }, [socket]);
+  }, [socket, jitsiRoomName, navigation]);
 
   const initiateCall = () => {
     if (socket?.connected) {
@@ -130,83 +156,9 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
   };
 
   const handleClose = () => {
-    if (jitsiMeetingRef.current) {
-      try {
-        jitsiMeetingRef.current.close();
-      } catch (error) {
-        console.error('Error closing Jitsi meeting:', error);
-      }
-    }
-    
-    setShowJitsi(false);
     setCallStatus('connecting');
-    setJitsiUrl('');
+    setJitsiRoomName('');
     onClose();
-  };
-
-  // Jitsi event callbacks
-  const onConferenceTerminated = useCallback(() => {
-    console.log('Jitsi conference terminated');
-    if (socket?.connected) {
-      socket.emit('call:end');
-    }
-    handleClose();
-  }, [socket]);
-
-  const onConferenceJoined = useCallback(() => {
-    console.log('Conference joined');
-  }, []);
-
-  const onConferenceWillJoin = useCallback(() => {
-    console.log('Will join conference');
-  }, []);
-
-  // Render Jitsi meeting component
-  const renderJitsiMeeting = () => {
-    if (!showJitsi || !jitsiUrl) return null;
-    
-    const jitsiRoomName = jitsiUrl.split('/').pop();
-    
-    return (
-      <View style={styles.jitsiContainer}>
-        <JitsiMeeting
-          ref={jitsiMeetingRef}
-          serverURL="https://call.bloomattires.com"
-          room={jitsiRoomName}
-          config={{
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            subject: 'Medical Consultation',
-            hideConferenceTimer: false,
-            whiteboard: {
-              enabled: true,
-              collabServerBaseUrl: "https://call.bloomattires.com/",
-            },
-          }}
-          flags={{
-            "audioMute.enabled": true,
-            "ios.screensharing.enabled": true,
-            "fullscreen.enabled": true,
-            "audioOnly.enabled": true,
-            "android.screensharing.enabled": true,
-            "pip.enabled": true,
-            "pip-while-screen-sharing.enabled": true,
-            "conference-timer.enabled": true,
-            "close-captions.enabled": false,
-            "toolbox.enabled": true,
-          }}
-          userInfo={{
-            displayName: 'Patient',
-            email: '',
-            avatar: '',
-          }}
-          onConferenceTerminated={onConferenceTerminated}
-          onConferenceJoined={onConferenceJoined}
-          onConferenceWillJoin={onConferenceWillJoin}
-          style={styles.jitsiMeeting}
-        />
-      </View>
-    );
   };
 
   // Render calling UI
@@ -270,7 +222,7 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
       onRequestClose={handleCancel}
       statusBarTranslucent
     >
-      {showJitsi ? renderJitsiMeeting() : renderCallingScreen()}
+      {renderCallingScreen()}
     </Modal>
   );
 };
@@ -367,14 +319,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: scale(24),
     fontWeight: 'bold',
-  },
-  jitsiContainer: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  jitsiMeeting: {
-    flex: 1,
-  },
+  }
 });
 
 export default VideoCallScreen;

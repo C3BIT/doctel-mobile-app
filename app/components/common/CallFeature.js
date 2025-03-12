@@ -30,7 +30,6 @@ const dynamicFontSize = (size) => (width * size) / 375;
 const CallFeature = () => {
   const [isVideoCallModalVisible, setIsVideoCallModalVisible] = useState(false);
   const [isAudioCallModalVisible, setIsAudioCallModalVisible] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
   const { socket, isConnected } = useWebSocket();
   
   useEffect(() => {
@@ -137,7 +136,6 @@ const CallFeature = () => {
       <VideoCallScreen
         visible={isVideoCallModalVisible}
         onClose={handleCloseVideoCall}
-        doctorInfo={selectedDoctor}
       />
     </View>
   );
