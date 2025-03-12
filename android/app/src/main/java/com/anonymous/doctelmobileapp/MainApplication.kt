@@ -14,6 +14,7 @@ import com.facebook.soloader.SoLoader
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
+import com.oney.WebRTCModule.WebRTCModuleOptions 
 
 class MainApplication : Application(), ReactApplication {
 
@@ -46,6 +47,8 @@ class MainApplication : Application(), ReactApplication {
       load()
     }
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    val options = WebRTCModuleOptions.getInstance()
+    options.enableMediaProjectionService = true
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {
