@@ -9,8 +9,8 @@ import {
   SafeAreaView,
   Dimensions,
   Platform,
+  StatusBar,
   Alert,
-  NativeModules,
 } from 'react-native';
 import { JitsiMeeting } from '@jitsi/react-native-sdk';
 import WaveBackground from '../common/WaveBackground';
@@ -18,42 +18,34 @@ import { useWebSocket } from '../../providers/WebSocketProvider';
 
 const { width, height } = Dimensions.get('window');
 
-const dynamicWidth = (percentage) => (width * percentage) / 100;
-const dynamicHeight = (percentage) => (height * percentage) / 100;
-const dynamicFontSize = (size) => (width * size) / 375;
-
-if (NativeModules.RNJitsiMeetingModule) {
-  if (!NativeModules.RNJitsiMeetingModule.addListener) {
-    NativeModules.RNJitsiMeetingModule.addListener = () => {};
-  }
-  if (!NativeModules.RNJitsiMeetingModule.removeListeners) {
-    NativeModules.RNJitsiMeetingModule.removeListeners = () => {};
-  }
-}
+// Responsive utility functions
+const scale = size => (width / 375) * size;
+const verticalScale = size => (height / 812) * size;
 
 const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
-  const [callStatus, setCallStatus] = useState('connecting'); 
+  const [callStatus, setCallStatus] = useState('connecting');
   const [jitsiUrl, setJitsiUrl] = useState('');
   const [showJitsi, setShowJitsi] = useState(false);
   const { socket } = useWebSocket();
   const callTimeoutRef = useRef(null);
   const jitsiMeetingRef = useRef(null);
-  
+
+  // Initialize call when modal becomes visible
   useEffect(() => {
     if (visible) {
       initiateCall();
       callTimeoutRef.current = setTimeout(() => {
         if (callStatus === 'connecting') {
           setCallStatus('failed');
-        //   Alert.alert(
-        //     'Call Failed',
-        //     'No doctors available at this moment. Please try again later.',
-        //     [{ text: 'OK', onPress: handleClose }]
-        //   );
+          Alert.alert(
+            'Call Failed',
+            'No doctors available at this moment. Please try again later.',
+            [{ text: 'OK', onPress: handleClose }]
+          );
         }
       }, 30000);
     }
-    
+
     return () => {
       if (callTimeoutRef.current) {
         clearTimeout(callTimeoutRef.current);
@@ -61,29 +53,61 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
     };
   }, [visible]);
 
+  // Setup socket event listeners
   useEffect(() => {
     if (!socket) return;
-    
-    const handleInitiated = (data) => handleCallInitiated(data);
-    const handleAccepted = (data) => handleCallAccepted(data);
-    const handleFailed = (data) => handleCallFailed(data);
-    const handleDisconnected = (data) => handleDoctorDisconnected(data);
-    
+
+    const handleInitiated = (data) => {
+      console.log('Call initiated:', data);
+      setJitsiUrl(data.jitsiRoom);
+    };
+
+    const handleAccepted = (data) => {
+      console.log('Call accepted by doctor:', data);
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+      }
+      setCallStatus('accepted');
+      setShowJitsi(true);
+    };
+
+    const handleFailed = (data) => {
+      console.log('Call failed:', data);
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+      }
+      setCallStatus('failed');
+    //   Alert.alert(
+    //     'Call Failed',
+    //     data.message || 'Unable to connect with a doctor. Please try again later.',
+    //     [{ text: 'OK', onPress: handleClose }]
+    //   );
+    };
+
+    const handleDoctorDisconnected = (data) => {
+      console.log('Doctor disconnected:', data);
+      Alert.alert(
+        'Call Ended',
+        'The doctor has disconnected from the call.',
+        [{ text: 'OK', onPress: handleClose }]
+      );
+    };
+
     socket.on('call:initiated', handleInitiated);
     socket.on('call:accepted', handleAccepted);
-    // socket.on('call:failed', handleFailed);
-    socket.on('doctor:disconnected', handleDisconnected);
-    
+    socket.on('call:failed', handleFailed);
+    socket.on('doctor:disconnected', handleDoctorDisconnected);
+
     return () => {
       socket.off('call:initiated', handleInitiated);
       socket.off('call:accepted', handleAccepted);
       socket.off('call:failed', handleFailed);
-      socket.off('doctor:disconnected', handleDisconnected);
+      socket.off('doctor:disconnected', handleDoctorDisconnected);
     };
   }, [socket]);
 
   const initiateCall = () => {
-    if (socket && socket.connected) {
+    if (socket?.connected) {
       console.log('Initiating call to doctor');
       socket.emit('call:initiate');
       setCallStatus('connecting');
@@ -97,46 +121,8 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
     }
   };
 
-  const handleCallInitiated = (data) => {
-    console.log('Call initiated:', data);
-    setJitsiUrl(data.jitsiRoom);
-  };
-
-  const handleCallAccepted = (data) => {
-    console.log('Call accepted by doctor:', data);
-    if (callTimeoutRef.current) {
-      clearTimeout(callTimeoutRef.current);
-    }
-    
-    setCallStatus('accepted');
-    setShowJitsi(true);
-  };
-
-  const handleCallFailed = (data) => {
-    console.log('Call failed:', data);
-    if (callTimeoutRef.current) {
-      clearTimeout(callTimeoutRef.current);
-    }
-    
-    setCallStatus('failed');
-    Alert.alert(
-      'Call Failed',
-      data.message || 'Unable to connect with a doctor. Please try again later.',
-      [{ text: 'OK', onPress: handleClose }]
-    );
-  };
-
-  const handleDoctorDisconnected = (data) => {
-    console.log('Doctor disconnected:', data);
-    Alert.alert(
-      'Call Ended',
-      'The doctor has disconnected from the call.',
-      [{ text: 'OK', onPress: handleClose }]
-    );
-  };
-
   const handleCancel = () => {
-    if (socket && socket.connected) {
+    if (socket?.connected) {
       socket.emit('call:end');
       console.log('Call cancelled by patient');
     }
@@ -161,7 +147,7 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
   // Jitsi event callbacks
   const onConferenceTerminated = useCallback(() => {
     console.log('Jitsi conference terminated');
-    if (socket && socket.connected) {
+    if (socket?.connected) {
       socket.emit('call:end');
     }
     handleClose();
@@ -175,6 +161,7 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
     console.log('Will join conference');
   }, []);
 
+  // Render Jitsi meeting component
   const renderJitsiMeeting = () => {
     if (!showJitsi || !jitsiUrl) return null;
     
@@ -226,12 +213,24 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
   const renderCallingScreen = () => {
     return (
       <WaveBackground>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         <SafeAreaView style={styles.safeArea}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.endButton}
+              onPress={handleCancel}
+              accessibilityLabel="End call"
+            >
+              <Text style={styles.endButtonText}>End</Text>
+            </TouchableOpacity>
+          </View>
+          
           <View style={styles.callingContainer}>
             <View style={styles.doctorAvatarContainer}>
               <Image
                 source={require('../../assets/avatar.png')}
                 style={styles.doctorAvatar}
+                resizeMode="cover"
               />
             </View>
             
@@ -245,19 +244,18 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
             <Text style={styles.callingText}>
               {callStatus === 'connecting' ? 'Calling...' : 'Connected'}
             </Text>
-            
-            <View style={styles.cancelButtonContainer}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCancel}
-              >
-                <Image
-                  source={require('../../assets/audioIcon.png')}
-                  style={styles.cancelIcon}
-                />
-                <Text style={styles.cancelText}>slide to cancel</Text>
-              </TouchableOpacity>
-            </View>
+          </View>
+          
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+              accessibilityLabel="Cancel call"
+            >
+              <View style={styles.cancelIconContainer}>
+                <Text style={styles.cancelIconText}>X</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </WaveBackground>
@@ -270,6 +268,7 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
       animationType="slide"
       transparent={false}
       onRequestClose={handleCancel}
+      statusBarTranslucent
     >
       {showJitsi ? renderJitsiMeeting() : renderCallingScreen()}
     </Modal>
@@ -277,72 +276,97 @@ const VideoCallScreen = ({ visible, onClose, doctorInfo }) => {
 };
 
 const styles = StyleSheet.create({
-  linearGradient: {
-    flex: 1,
-  },
   safeArea: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
+  header: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 10,
+    right: 20,
+    zIndex: 10,
+  },
+  endButton: {
+    backgroundColor: '#E74C3C',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  endButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: scale(14),
   },
   callingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: scale(20),
   },
   doctorAvatarContainer: {
-    width: dynamicWidth(30),
-    height: dynamicWidth(30),
-    borderRadius: dynamicWidth(15),
+    width: scale(120),
+    height: scale(120),
+    borderRadius: scale(60),
     backgroundColor: '#8EE4AF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: dynamicHeight(3),
+    marginBottom: verticalScale(24),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   doctorAvatar: {
-    width: dynamicWidth(25),
-    height: dynamicWidth(25),
-    borderRadius: dynamicWidth(12.5),
+    width: scale(105),
+    height: scale(105),
+    borderRadius: scale(52.5),
   },
   doctorName: {
-    fontSize: dynamicFontSize(20),
+    fontSize: scale(22),
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: dynamicHeight(1),
+    marginBottom: verticalScale(8),
     textAlign: 'center',
   },
   doctorCredentials: {
-    fontSize: dynamicFontSize(14),
+    fontSize: scale(16),
     color: '#E0FFFF',
-    marginBottom: dynamicHeight(2),
+    marginBottom: verticalScale(16),
     textAlign: 'center',
   },
   callingText: {
-    fontSize: dynamicFontSize(16),
+    fontSize: scale(18),
     color: '#FFFFFF',
-    marginBottom: dynamicHeight(10),
+    marginBottom: verticalScale(20),
   },
-  cancelButtonContainer: {
+  footer: {
     position: 'absolute',
-    bottom: dynamicHeight(5),
-    width: dynamicWidth(80),
+    bottom: Platform.OS === 'ios' ? 40 : 30,
+    width: '100%',
+    alignItems: 'center',
   },
   cancelButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 30,
-    paddingHorizontal: dynamicWidth(4),
-    paddingVertical: dynamicHeight(1.5),
+    justifyContent: 'center',
   },
-  cancelIcon: {
-    width: dynamicWidth(8),
-    height: dynamicWidth(8),
-    tintColor: '#FF6347',
+  cancelIconContainer: {
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(30),
+    backgroundColor: '#E74C3C',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  cancelText: {
-    color: '#FFFFFF',
-    marginLeft: dynamicWidth(2),
-    fontSize: dynamicFontSize(14),
+  cancelIconText: {
+    color: 'white',
+    fontSize: scale(24),
+    fontWeight: 'bold',
   },
   jitsiContainer: {
     flex: 1,
