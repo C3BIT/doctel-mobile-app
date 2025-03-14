@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { JitsiMeeting } from "@jitsi/react-native-sdk";
 import { useWebSocket } from "../../providers/WebSocketProvider";
-import { Mic, Video, Phone } from "lucide-react-native";
+import { Mic, MicOff, Video, VideoOff, Phone } from "lucide-react-native";
 
 const JitsiMeetingScreen = ({ route, navigation }) => {
   const { room, doctorInfo } = route.params;
@@ -65,17 +65,33 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
     navigation.goBack();
   };
 
+  // Fixed toggleAudio function using the correct command method
   const toggleAudio = useCallback(() => {
-    if (jitsiMeetingRef.current) {
-      jitsiMeetingRef.current.executeCommand("toggleAudio");
-      setIsAudioMuted(!isAudioMuted);
+    try {
+      console.log("Toggling audio...");
+      if (jitsiMeetingRef.current) {
+        // Set the audio muted state directly - this is the correct approach for the React Native SDK
+        // Instead of executeCommand, we need to use setAudioMuted
+        jitsiMeetingRef.current.setAudioMuted(!isAudioMuted);
+        setIsAudioMuted(!isAudioMuted);
+      }
+    } catch (error) {
+      console.error("Error toggling audio:", error);
     }
   }, [isAudioMuted]);
 
+  // Fixed toggleVideo function using the correct command method
   const toggleVideo = useCallback(() => {
-    if (jitsiMeetingRef.current) {
-      jitsiMeetingRef.current.executeCommand("toggleVideo");
-      setIsVideoMuted(!isVideoMuted);
+    try {
+      console.log("Toggling video...");
+      if (jitsiMeetingRef.current) {
+        // Set the video muted state directly - this is the correct approach for the React Native SDK
+        // Instead of executeCommand, we need to use setVideoMuted
+        jitsiMeetingRef.current.setVideoMuted(!isVideoMuted);
+        setIsVideoMuted(!isVideoMuted);
+      }
+    } catch (error) {
+      console.error("Error toggling video:", error);
     }
   }, [isVideoMuted]);
 
@@ -87,6 +103,22 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
 
   const onConferenceJoined = useCallback(() => {
     console.log("Conference joined successfully");
+    
+    // Initialize mute states after joining
+    setTimeout(() => {
+      try {
+        if (jitsiMeetingRef.current) {
+          const audioMuted = jitsiMeetingRef.current.isAudioMuted();
+          const videoMuted = jitsiMeetingRef.current.isVideoMuted();
+          console.log("Initial states:", { audioMuted, videoMuted });
+          
+          if (audioMuted !== undefined) setIsAudioMuted(audioMuted);
+          if (videoMuted !== undefined) setIsVideoMuted(videoMuted);
+        }
+      } catch (error) {
+        console.error("Error getting initial mute states:", error);
+      }
+    }, 1000);
   }, []);
 
   const onConferenceWillJoin = useCallback(() => {
@@ -104,6 +136,8 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
 
   // Process Jitsi API events for audio/video state tracking
   const onApiResponse = useCallback((event) => {
+    console.log("Jitsi API event:", event?.name, event);
+    
     if (event?.name === "audioMuteStatusChanged") {
       setIsAudioMuted(event.muted);
     } else if (event?.name === "videoMuteStatusChanged") {
@@ -122,20 +156,23 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
           startWithVideoMuted: false,
           subject: "Medical Consultation",
           prejoinPageEnabled: false,
-          hideConferenceTimer: false,
+          hideConferenceTimer: true,
+          disableDeepLinking: true,
+          disableInviteFunctions: true,
           whiteboard: {
             enabled: true,
             collabServerBaseUrl: "https://call.bloomattires.com/",
           },
-          // Hide native controls we'll replace
-          toolbarButtons: [
-            "hangup",
-            "chat",
-            "raisehand",
-            "tileview",
-            "whiteboard",
-            "settings",
-          ],
+          toolbarButtons: [],
+          hideConferenceSubject: true,
+          hideDisplayName: true,
+          notifications: {
+            enabled: false,
+          },
+          participantsPane: {
+            enabled: false,
+            hideDisplayName: true,
+          },
         }}
         flags={{
           prejoinPageEnabled: false,
@@ -146,9 +183,10 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
           "android.screensharing.enabled": true,
           "pip.enabled": true,
           "pip-while-screen-sharing.enabled": true,
-          "conference-timer.enabled": true,
-          "toolbox.enabled": true,
+          "conference-timer.enabled": false,
           "filmstrip.enabled": true,
+          "notifications.enabled": false,
+          "participants-pane.enabled": false,
         }}
         userInfo={{
           displayName: "Patient",
@@ -174,25 +212,41 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
             isAudioMuted ? styles.buttonRed : styles.buttonGreen,
           ]}
           onPress={toggleAudio}
+          activeOpacity={0.7}
         >
-          <Mic width={24} height={24} color="#ffffff" />
+          {isAudioMuted ? (
+            <MicOff width={24} height={24} color="#ffffff" />
+          ) : (
+            <Mic width={24} height={24} color="#ffffff" />
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.button,
-            isVideoMuted ? styles.buttonRed : styles.buttonRed,
+            isVideoMuted ? styles.buttonRed : styles.buttonGreen,
           ]}
           onPress={toggleVideo}
+          activeOpacity={0.7}
         >
-          <Video width={24} height={24} color="#ffffff" />
+          {isVideoMuted ? (
+            <VideoOff width={24} height={24} color="#ffffff" />
+          ) : (
+            <Video width={24} height={24} color="#ffffff" />
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.buttonRed]}
           onPress={handleEndCall}
+          activeOpacity={0.7}
         >
-          <Phone width={24} height={24} color="#ffffff" />
+          <Phone 
+            width={24} 
+            height={24} 
+            color="#ffffff" 
+            style={{ transform: [{ rotate: "135deg" }] }} 
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -217,7 +271,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 15,
-    backgroundColor: "#192841",
+    backgroundColor: "rgba(25, 40, 65, 0.9)",
     borderRadius: 30,
     marginHorizontal: 40,
   },
@@ -228,6 +282,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonGreen: {
     backgroundColor: "#4CAF50",
