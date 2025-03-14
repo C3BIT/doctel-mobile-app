@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,29 +6,70 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-} from "react-native";
+  Alert,
+  NativeModules,
+} from 'react-native';
+import { useWebSocket } from '../../providers/WebSocketProvider';
+import VideoCallScreen from '../Calling/VideoCallScreen';
 
-const { width, height } = Dimensions.get("window");
+if (NativeModules.RNJitsiMeetingModule) {
+  if (!NativeModules.RNJitsiMeetingModule.addListener) {
+    NativeModules.RNJitsiMeetingModule.addListener = () => {};
+  }
+  if (!NativeModules.RNJitsiMeetingModule.removeListeners) {
+    NativeModules.RNJitsiMeetingModule.removeListeners = () => {};
+  }
+}
+
+const { width, height } = Dimensions.get('window');
 
 const dynamicWidth = (percentage) => (width * percentage) / 100;
 const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
 const CallFeature = () => {
-  // Methods to handle button clicks
+  const [isVideoCallModalVisible, setIsVideoCallModalVisible] = useState(false);
+  const [isAudioCallModalVisible, setIsAudioCallModalVisible] = useState(false);
+  const { socket, isConnected } = useWebSocket();
+  
+  useEffect(() => {
+    if (socket) {
+      const handleDoctorList = (doctors) => {
+        console.log('Available doctors:', doctors);
+      };
+      
+      socket.on('doctor:list', handleDoctorList);
+      
+      return () => {
+        socket.off('doctor:list', handleDoctorList);
+      };
+    }
+  }, [socket]);
+  
   const handleVideoCall = () => {
-    console.log("Video Call clicked");
-    // Add your video call logic here
+    if (!isConnected) {
+      Alert.alert(
+        'Connection Error',
+        'Unable to connect to the service. Trying to reconnect...',
+      );
+      return;
+    }
+    
+    console.log('Video Call clicked');
+    setIsVideoCallModalVisible(true);
   };
 
   const handleAudioCall = () => {
-    console.log("Audio Call clicked");
-    // Add your audio call logic here
+    console.log('Audio Call clicked');
+    Alert.alert('Audio Call', 'Audio call feature coming soon');
   };
 
   const handleCallHistory = () => {
-    console.log("Call History clicked");
-    // Add your call history logic here
+    console.log('Call History clicked');
+  };
+
+  const handleCloseVideoCall = () => {
+    setIsVideoCallModalVisible(false);
   };
 
   return (
@@ -58,12 +99,12 @@ const CallFeature = () => {
         style={styles.optionContainer}
         onPress={handleAudioCall}
       >
-          <View style={styles.iconAudioContainer}>
-        <Image
-          source={require("../../assets/audioIcon.png")}
-          style={styles.icon}
-          resizeMode="contain"
-        />
+        <View style={styles.iconAudioContainer}>
+          <Image
+            source={require("../../assets/audioIcon.png")}
+            style={styles.icon}
+            resizeMode="contain"
+          />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.optionTitle}>Audio Call</Text>
@@ -77,12 +118,12 @@ const CallFeature = () => {
         style={styles.optionContainer}
         onPress={handleCallHistory}
       >
-          <View style={styles.iconHistoryContainer}>
-        <Image
-          source={require("../../assets/callHistoryIcon.png")}
-          style={styles.icon}
-          resizeMode="contain"
-        />
+        <View style={styles.iconHistoryContainer}>
+          <Image
+            source={require("../../assets/callHistoryIcon.png")}
+            style={styles.icon}
+            resizeMode="contain"
+          />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.optionTitle}>Call History</Text>
@@ -91,6 +132,11 @@ const CallFeature = () => {
           </Text>
         </View>
       </TouchableOpacity>
+
+      <VideoCallScreen
+        visible={isVideoCallModalVisible}
+        onClose={handleCloseVideoCall}
+      />
     </View>
   );
 };
