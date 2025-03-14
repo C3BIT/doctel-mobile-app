@@ -16,8 +16,9 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
   const { socket } = useWebSocket();
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
+  
+  const [callTime, setCallTime] = useState(null);
 
-  // Handle hardware back button on Android
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -30,7 +31,6 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
     return () => backHandler.remove();
   }, []);
 
-  // Handle doctor disconnection
   useEffect(() => {
     if (!socket) return;
 
@@ -49,6 +49,10 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
   }, [socket]);
 
   const handleEndCall = () => {
+    if (callTime) {
+      console.log(`Call ended. Duration: ${callTime}`);
+    }
+    
     if (socket?.connected) {
       socket.emit("call:end");
       console.log("Call ended by patient");
@@ -65,13 +69,9 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
     navigation.goBack();
   };
 
-  // Fixed toggleAudio function using the correct command method
   const toggleAudio = useCallback(() => {
     try {
-      console.log("Toggling audio...");
       if (jitsiMeetingRef.current) {
-        // Set the audio muted state directly - this is the correct approach for the React Native SDK
-        // Instead of executeCommand, we need to use setAudioMuted
         jitsiMeetingRef.current.setAudioMuted(!isAudioMuted);
         setIsAudioMuted(!isAudioMuted);
       }
@@ -80,13 +80,9 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
     }
   }, [isAudioMuted]);
 
-  // Fixed toggleVideo function using the correct command method
   const toggleVideo = useCallback(() => {
     try {
-      console.log("Toggling video...");
       if (jitsiMeetingRef.current) {
-        // Set the video muted state directly - this is the correct approach for the React Native SDK
-        // Instead of executeCommand, we need to use setVideoMuted
         jitsiMeetingRef.current.setVideoMuted(!isVideoMuted);
         setIsVideoMuted(!isVideoMuted);
       }
@@ -95,7 +91,6 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
     }
   }, [isVideoMuted]);
 
-  // Jitsi event callbacks
   const onConferenceTerminated = useCallback(() => {
     console.log("Jitsi conference terminated");
     handleEndCall();
@@ -103,8 +98,6 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
 
   const onConferenceJoined = useCallback(() => {
     console.log("Conference joined successfully");
-    
-    // Initialize mute states after joining
     setTimeout(() => {
       try {
         if (jitsiMeetingRef.current) {
@@ -134,14 +127,19 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
     );
   }, []);
 
-  // Process Jitsi API events for audio/video state tracking
   const onApiResponse = useCallback((event) => {
-    console.log("Jitsi API event:", event?.name, event);
-    
     if (event?.name === "audioMuteStatusChanged") {
       setIsAudioMuted(event.muted);
     } else if (event?.name === "videoMuteStatusChanged") {
       setIsVideoMuted(event.muted);
+    } else if (event?.name === "conference.timer") {
+      if (event?.value) {
+        if (typeof event.value === 'object' && event.value.formattedValue) {
+          setCallTime(event.value.formattedValue);
+        } else if (typeof event.value === 'string') {
+          setCallTime(event.value);
+        }
+      }
     }
   }, []);
 
@@ -156,7 +154,7 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
           startWithVideoMuted: false,
           subject: "Medical Consultation",
           prejoinPageEnabled: false,
-          hideConferenceTimer: true,
+          hideConferenceTimer: false,
           disableDeepLinking: true,
           disableInviteFunctions: true,
           whiteboard: {
@@ -183,7 +181,7 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
           "android.screensharing.enabled": true,
           "pip.enabled": true,
           "pip-while-screen-sharing.enabled": true,
-          "conference-timer.enabled": false,
+          "conference-timer.enabled": true,
           "filmstrip.enabled": true,
           "notifications.enabled": false,
           "participants-pane.enabled": false,
@@ -200,11 +198,11 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
         eventListeners={[
           { name: "audioMuteStatusChanged", listener: onApiResponse },
           { name: "videoMuteStatusChanged", listener: onApiResponse },
+          { name: "conference.timer", listener: onApiResponse }
         ]}
         style={styles.jitsiMeeting}
       />
 
-      {/* Custom buttons overlay */}
       <View style={styles.customButtonsContainer}>
         <TouchableOpacity
           style={[
