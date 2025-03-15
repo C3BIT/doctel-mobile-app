@@ -19,7 +19,7 @@ export const WebSocketProvider = ({ children }) => {
             return;
         }
 
-        const newSocket = io("http://192.168.0.244:8088", {
+        const newSocket = io("https://api.bloomattires.com", {
             transports: ["websocket"],
             extraHeaders: { Authorization: `Bearer ${token}` }, 
             reconnection: true,
