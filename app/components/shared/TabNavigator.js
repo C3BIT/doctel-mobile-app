@@ -1,139 +1,191 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { StyleSheet, View, Dimensions, Text, Platform, TouchableOpacity } from "react-native";
-import { Home, Package, User } from "lucide-react-native";
+import { StyleSheet, View, Dimensions, Text, Platform, TouchableOpacity, PixelRatio } from "react-native";
 import PackageScreen from "../../screens/PackageScreen";
 import { ProfileScreen } from "./../../screens/ProfileScreen";
 import HomeScreen from "./../../screens/HomeScreen";
+import { Svg, Path } from "react-native-svg";
+import HomeIcon from "../../assets/home_icon.svg";
+import PackageIcon from "../../assets/package_icon.svg";
+import ProfileIcon from "../../assets/profile_icon.svg";
 
 const Tab = createBottomTabNavigator();
 const { height, width } = Dimensions.get("window");
-
 const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicWidth = (percentage) => (width * percentage) / 100;
 
-const CustomTabBarButton = ({ children, onPress }) => (
-  <View style={styles.customTabContainer}>
-    <View style={styles.customTabBackground}>
-      <TouchableOpacity style={styles.customTabIconWrapper} onPress={onPress}>
-        {children}
-      </TouchableOpacity>
+// Function to normalize font size based on PixelRatio
+const normalizeFontSize = (size) => {
+  const scale = width / 375; // 375 is the standard width for design (e.g., iPhone 6/7/8)
+  const newSize = size * scale;
+  return Math.round(PixelRatio.roundToNearestPixel(newSize));
+};
+
+const CustomTabBar = ({ state, descriptors, navigation }) => {
+  return (
+    <View style={styles.tabBarContainer}>
+      <View style={styles.curveContainer}>
+        <Svg width={width} height={dynamicHeight(10)}>
+          <Path
+            d={`M0,0 L${width / 2 - dynamicWidth(15)},0 
+                Q${width / 2},${dynamicHeight(8)} ${width / 2 + dynamicWidth(15)},0 
+                L${width},0 L${width},${dynamicHeight(10)} L0,${dynamicHeight(10)} Z`}
+            fill="#eff1ed"
+          />
+        </Svg>
+      </View>
+      <View style={styles.tabBar}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          if (route.name === 'Home') {
+            return (
+              <View key={index} style={styles.customTabContainer}>
+                <TouchableOpacity
+                  onPress={onPress}
+                  style={styles.customTabIconWrapper}
+                  activeOpacity={0.8}
+                >
+                  <HomeIcon width={dynamicWidth(6.5)} height={dynamicWidth(6.5)} />
+                </TouchableOpacity>
+              </View>
+            );
+          }
+
+          let IconComponent;
+          switch (route.name) {
+            case "Packages":
+              IconComponent = PackageIcon;
+              break;
+            case "Profile":
+              IconComponent = ProfileIcon;
+              break;
+            default:
+              IconComponent = PackageIcon;
+          }
+
+          return (
+            <TouchableOpacity
+              key={index}
+              onPress={onPress}
+              style={styles.tabItemContainer}
+              activeOpacity={0.7}
+            >
+              <IconComponent
+                width={dynamicWidth(6.5)}
+                height={dynamicWidth(6.5)}
+                fill={isFocused ? "#1E3A8A" : "#6B7280"}
+              />
+              <Text
+                style={[
+                  styles.tabBarLabel,
+                  isFocused && styles.tabBarLabelFocused,
+                ]}
+              >
+                {route.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const TabNavigator = () => {
   return (
     <Tab.Navigator
       initialRouteName="Home"
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused }) => {
-          let Icon;
-          switch (route.name) {
-            case "Packages":
-              Icon = Package;
-              break;
-            case "Home":
-              Icon = Home;
-              break;
-            case "Profile":
-              Icon = User;
-              break;
-            default:
-              Icon = Home;
-          }
-
-          if (route.name === "Home") {
-            return (
-              <Icon
-                size={dynamicWidth(5.5)}
-                color="#FFFFFF"
-                strokeWidth={2.5}
-              />
-            );
-          }
-          return (
-            <Icon
-              size={dynamicWidth(5.5)}
-              color="#1E3A8A"
-              strokeWidth={focused ? 2.5 : 2}
-            />
-          );
-        },
-        tabBarLabel: ({ focused }) => {
-          let label;
-          switch (route.name) {
-            case "Packages":
-              label = "Packages";
-              break;
-            case "Home":
-              label = "";
-              break;
-            case "Profile":
-              label = "Profile";
-              break;
-            default:
-              label = "";
-          }
-
-          if (route.name === "Home") return null;
-
-          return (
-            <Text
-              style={[styles.tabBarLabel, focused && styles.tabBarLabelFocused]}
-            >
-              {label}
-            </Text>
-          );
-        },
-        tabBarActiveTintColor: "#1E3A8A",
-        tabBarInactiveTintColor: "#1E3A8A",
-        tabBarHideOnKeyboard: true,
-        tabBarStyle: styles.tabBar,
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
         headerShown: false,
-      })}
+        cardStyle: { backgroundColor: '#EAEFF5' }
+      }}
     >
       <Tab.Screen name="Packages" component={PackageScreen} />
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ tabBarButton: (props) => <CustomTabBarButton {...props} /> }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
 
 const styles = StyleSheet.create({
-  tabBar: {
+  tabBarContainer: {
     position: "absolute",
-    backgroundColor: "#F1F5F9",
-    height: Platform.OS === "ios" ? dynamicHeight(8) : dynamicHeight(7),
-    paddingBottom: Platform.OS === "ios" ? dynamicHeight(1) : 0,
+    bottom: 0,
+    width: "100%",
+    height: Platform.select({
+      ios: dynamicHeight(6),
+      android: dynamicHeight(5),
+    }),
+  },
+  curveContainer: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    zIndex: 0,
+  },
+  tabBar: {
+    flexDirection: "row",
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: Platform.select({
+      ios: dynamicHeight(7),
+      android: dynamicHeight(6),
+    }),
+    backgroundColor: "transparent",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingBottom: Platform.select({
+      ios: dynamicHeight(1),
+      android: 0,
+    }),
     borderTopWidth: 0,
     elevation: 0,
+    zIndex: 1,
+  },
+  tabItemContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    flexDirection: "row",
+    gap: 8,
+    marginTop: Platform.select({
+      ios: -dynamicHeight(2.5),
+      android: -dynamicHeight(2),
+    }),
   },
   tabBarLabel: {
-    fontSize: dynamicWidth(2.8),
+    fontSize: normalizeFontSize(14),
     textAlign: "center",
-    color: "#1E3A8A",
+    color: "#6B7280",
     marginTop: dynamicHeight(0.3),
   },
   tabBarLabelFocused: {
+    color: "#1E3A8A",
     fontWeight: "500",
   },
   customTabContainer: {
-    top: -dynamicHeight(2.5),
+    flex: 1,
     alignItems: "center",
-  },
-  customTabBackground: {
-    width: dynamicWidth(20),
-    height: dynamicWidth(10),
-    borderTopLeftRadius: dynamicWidth(10),
-    borderTopRightRadius: dynamicWidth(10),
-    backgroundColor: "#F1F5F9",
-    justifyContent: "flex-end",
-    alignItems: "center",
+    marginTop: Platform.select({
+      ios: -130,
+      android: -120,
+    }),
   },
   customTabIconWrapper: {
     width: dynamicWidth(12),
@@ -147,7 +199,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+    zIndex: 10,
   },
 });
-
 export default TabNavigator;
