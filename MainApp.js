@@ -9,11 +9,12 @@ import { enableScreens } from "react-native-screens";
 // Screens
 import LoginScreen from "./app/features/auth/screens/LoginScreen";
 import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationScreen";
-import PackageScreen from "./app/screens/PackageScreen";
+import ChatScreen from "./app/screens/ChatScreen";
 import { ProfileScreen } from "./app/screens/ProfileScreen";
 import TabNavigator from "./app/components/shared/TabNavigator";
 import { WebSocketProvider } from "./app/providers/WebSocketProvider";
 import JitsiMeetingScreen from "./app/components/Calling/JitsiMeetingScreen";
+
 
 enableScreens();
 
@@ -46,7 +47,8 @@ const AppStack = () => (
         }}
       />
     {/* <Stack.Screen name="Package" component={PackageScreen} />
-    <Stack.Screen name="Profile" component={ProfileScreen} /> */}
+    <Stack.Screen name="Chat" component={ChatScreen} /> */}
+     <Stack.Screen name="Chat" component={ChatScreen} />
   </Stack.Navigator>
 );
 
