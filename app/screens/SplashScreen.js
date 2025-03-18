@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions, Image } from 'react-native';
 import LogoSvg from '../assets/logo/doctelLogo.svg';
+import { SvgXml } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,47 +11,42 @@ const SplashScreen = ({ onFinish }) => {
   const translateY = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
-
-    const preloadTimeout = setTimeout(() => {
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateY, {
-            toValue: 0,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ]),
-        
-        Animated.delay(1200),
-        
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1.2,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start(() => {
-        onFinish();
-      });
-    }, 500); 
-    
-    return () => clearTimeout(preloadTimeout);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+      
+      Animated.delay(1200),
+      
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => {
+      onFinish();
+    });
   }, [fadeAnim, scaleAnim, translateY, onFinish]);
 
   return (
@@ -68,13 +64,7 @@ const SplashScreen = ({ onFinish }) => {
         ]}
       >
         <View style={styles.logoWrapper}>
-          {LogoSvg ? (
-            <LogoSvg width={80} height={80} fill="#FFFFFF" />
-          ) : (
-            <View style={styles.logoFallback}>
-              <Text style={styles.logoFallbackText}>D</Text>
-            </View>
-          )}
+          <SvgXml xml={LogoSvg} width="80" height="80" />
         </View>
         
         <Animated.Text 
@@ -99,6 +89,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#20ACE2',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
   },
   logoContainer: {
     alignItems: 'center',
@@ -110,19 +106,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  logoFallback: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoFallbackText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#20ACE2',
   },
   tagline: {
     color: '#FFFFFF',
