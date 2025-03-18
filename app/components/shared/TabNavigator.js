@@ -14,9 +14,8 @@ const { height, width } = Dimensions.get("window");
 const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicWidth = (percentage) => (width * percentage) / 100;
 
-// Function to normalize font size based on PixelRatio
 const normalizeFontSize = (size) => {
-  const scale = width / 375; // 375 is the standard width for design (e.g., iPhone 6/7/8)
+  const scale = width / 375;
   const newSize = size * scale;
   return Math.round(PixelRatio.roundToNearestPixel(newSize));
 };
@@ -25,7 +24,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   return (
     <View style={styles.tabBarContainer}>
       <View style={styles.curveContainer}>
-        <Svg width={width} height={dynamicHeight(10)}>
+        <Svg width={width} height={dynamicHeight(7)}>
           <Path
             d={`M0,0 L${width / 2 - dynamicWidth(15)},0 
                 Q${width / 2},${dynamicHeight(8)} ${width / 2 + dynamicWidth(15)},0 
@@ -183,8 +182,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     marginTop: Platform.select({
-      ios: -130,
-      android: -120,
+      ios: -100,
+      android: -80,
     }),
   },
   customTabIconWrapper: {
