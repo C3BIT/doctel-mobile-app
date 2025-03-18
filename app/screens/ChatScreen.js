@@ -12,7 +12,7 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
-import { MaterialIcons, Ionicons, Feather } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons,} from '@expo/vector-icons';
 import { initialMessages } from '../utils/data'; // Import the initial messages
 
 const { width, height } = Dimensions.get('window');
@@ -136,17 +136,9 @@ const ChatScreen = ({ navigation }) => {
             style={styles.doctorAvatar}
           />
           <View>
-            <Text style={styles.doctorName}>Dr. Michael Smith</Text>
+            <Text style={styles.doctorName}>Anonymous</Text>
             <Text style={styles.doctorStatus}>Online</Text>
           </View>
-        </View>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="videocam-outline" size={dynamicFontSize(24)} color="green" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Feather name="phone" size={dynamicFontSize(22)} color="red" />
-          </TouchableOpacity>
         </View>
       </View>
 
