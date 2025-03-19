@@ -40,14 +40,6 @@ const AppStack = () => (
       }}
     />
     <Stack.Screen name="Chat" component={ChatScreen} />
-    <Stack.Screen 
-        name="JitsiMeeting" 
-        component={JitsiMeetingScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-        }}
-      />
   </Stack.Navigator>
 );
 
