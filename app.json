@@ -4,11 +4,11 @@
     "slug": "doctel-mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/doctel.png",
+    "icon": "./assets/doctelLogo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/doctel.png",
+      "image": "./assets/doctelLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#223972"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/doctel.png",
+        "foregroundImage": "./assets/doctelLogo.png",
         "backgroundColor": "#223972"
       },
       "package": "com.anonymous.doctelmobileapp"

@@ -19,7 +19,6 @@ import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
-// Responsive utility functions
 const scale = size => (width / 375) * size;
 const verticalScale = size => (height / 812) * size;
 
@@ -31,7 +30,6 @@ const VideoCallScreen = ({ visible, onClose }) => {
   const [doctorInfo, setDoctorInfo] = useState({});
   const navigation = useNavigation();
 
-  // Initialize call when modal becomes visible
   useEffect(() => {
     if (visible) {
       initiateCall();
@@ -54,7 +52,6 @@ const VideoCallScreen = ({ visible, onClose }) => {
     };
   }, [visible]);
 
-  // Setup socket event listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -87,7 +84,6 @@ const VideoCallScreen = ({ visible, onClose }) => {
       }
       setCallStatus('accepted');
       
-      // Navigate to the JitsiMeeting screen instead of showing it in a modal
       if (jitsiRoomName) {
         handleClose();
         navigation.navigate('JitsiMeeting', { 
@@ -149,7 +145,7 @@ const VideoCallScreen = ({ visible, onClose }) => {
 
   const handleCancel = () => {
     if (socket?.connected) {
-      socket.emit('call:end');
+      socket.emit('call:cancel');
       console.log('Call cancelled by patient');
     }
     handleClose();
@@ -161,7 +157,6 @@ const VideoCallScreen = ({ visible, onClose }) => {
     onClose();
   };
 
-  // Render calling UI
   const renderCallingScreen = () => {
     return (
       <WaveBackground>
