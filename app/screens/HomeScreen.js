@@ -13,14 +13,14 @@ import {
 import CustomLanguageSwitch from "../components/common/CustomLanguageSwitch";
 import WellnessCard from "../components/common/WellnessCard";
 import CallFeature from "../components/common/CallFeature";
+import MessageIcon from '../assets/message_icon.svg';
 
 const { width, height } = Dimensions.get("window");
-
 const dynamicWidth = (percentage) => (width * percentage) / 100;
 const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -73,6 +73,14 @@ const HomeScreen = () => {
       <ScrollView style={styles.contentContainer}>
         <CallFeature />
       </ScrollView>
+
+      {/* Floating Button */}
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('Chat')}
+      >
+        <MessageIcon width={24} height={24} fill="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -174,6 +182,22 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     fontSize: dynamicFontSize(12),
     marginTop: dynamicHeight(0.5),
+  },
+  floatingButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 110,
+    backgroundColor: '#1E3A8A',
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5, // For shadow on Android
+    shadowColor: '#000', // For shadow on iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
   },
 });
 
