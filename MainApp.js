@@ -5,19 +5,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 import { enableScreens } from "react-native-screens";
-
 // Screens
 import LoginScreen from "./app/features/auth/screens/LoginScreen";
 import OTPVerificationScreen from "./app/features/auth/screens/OTPVerificationScreen";
 import ChatScreen from "./app/screens/ChatScreen";
-import { ProfileScreen } from "./app/screens/ProfileScreen";
 import TabNavigator from "./app/components/shared/TabNavigator";
 import { WebSocketProvider } from "./app/providers/WebSocketProvider";
 import JitsiMeetingScreen from "./app/components/Calling/JitsiMeetingScreen";
-
-
 enableScreens();
-
 const Stack = createNativeStackNavigator();
 LogBox.ignoreAllLogs();
 // Unauthenticated Stack
@@ -38,17 +33,15 @@ const AppStack = () => (
       component={TabNavigator}
       options={{ headerShown: false }}
     />
-    <Stack.Screen 
-        name="JitsiMeeting" 
-        component={JitsiMeetingScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-        }}
-      />
-    {/* <Stack.Screen name="Package" component={PackageScreen} />
-    <Stack.Screen name="Chat" component={ChatScreen} /> */}
-     <Stack.Screen name="Chat" component={ChatScreen} />
+    <Stack.Screen
+      name="JitsiMeeting"
+      component={JitsiMeetingScreen}
+      options={{
+        headerShown: false,
+        gestureEnabled: false,
+      }}
+    />
+    <Stack.Screen name="Chat" component={ChatScreen} />
   </Stack.Navigator>
 );
 
