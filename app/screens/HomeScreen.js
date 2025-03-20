@@ -74,7 +74,6 @@ const HomeScreen = ({ navigation }) => {
         <CallFeature />
       </ScrollView>
 
-      {/* Floating Button */}
       <TouchableOpacity
         style={styles.floatingButton}
         onPress={() => navigation.navigate('Chat')}
@@ -185,19 +184,20 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: 'absolute',
-    right: 20,
-    bottom: 110,
+    right: dynamicWidth(5),
+    bottom: Platform.OS === 'ios' ? dynamicHeight(10) : dynamicHeight(8),
     backgroundColor: '#1E3A8A',
     borderRadius: 30,
-    width: 60,
-    height: 60,
+    width: dynamicWidth(12),
+    height: dynamicWidth(12),
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5, // For shadow on Android
-    shadowColor: '#000', // For shadow on iOS
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 2,
+    zIndex: 999,
   },
 });
 

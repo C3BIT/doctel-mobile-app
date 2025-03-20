@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,269 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  StatusBar,
+  Animated,
+  Easing,
 } from 'react-native';
-import { MaterialIcons, Ionicons,} from '@expo/vector-icons';
-import { initialMessages } from '../utils/data'; // Import the initial messages
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { initialMessages } from '../utils/data';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
+const isIOS = Platform.OS === 'ios';
 
-// Dynamic sizing functions
-const dynamicWidth = (percentage) => (width * percentage) / 100;
-const dynamicHeight = (percentage) => (height * percentage) / 100;
-const dynamicFontSize = (size) => (width * size) / 375; // Base width for font scaling
+const scale = {
+  w: (size) => (width * size) / 100,
+  h: (size) => (height * size) / 100,
+  font: (size) => (width * size) / 375,
+};
+
+const UI = {
+  avatarSize: scale.w(10),
+  smallAvatarSize: scale.w(8),
+  borderRadius: scale.w(5),
+  inputHeight: scale.h(6),
+  spacing: {
+    xs: scale.w(1),
+    sm: scale.w(2),
+    md: scale.w(3),
+    lg: scale.w(4),
+  },
+};
+
+const Header = ({ navigation, opacity }) => (
+  <Animated.View style={[styles.header, { opacity }]}>
+    <TouchableOpacity
+      style={styles.backButton}
+      onPress={() => navigation.goBack()}
+      activeOpacity={0.7}>
+      <MaterialIcons name="arrow-back" size={scale.font(24)} color="#555" />
+    </TouchableOpacity>
+    <View style={styles.doctorInfo}>
+      <Image
+        source={{
+          uri: 'https://cdn-icons-png.flaticon.com/128/2785/2785482.png',
+        }}
+        style={styles.doctorAvatar}
+      />
+      <View>
+        <Text style={styles.doctorName}>Anonymous</Text>
+        <Text style={styles.doctorStatus}>Online</Text>
+      </View>
+    </View>
+  </Animated.View>
+);
+
+const MessageBubble = ({ message, animValue = new Animated.Value(0) }) => {
+  const isUser = message.sender === 'user';
+  
+  useEffect(() => {
+    Animated.timing(animValue, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.ease),
+    }).start();
+  }, []);
+  
+  const translateY = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0],
+  });
+  
+  const opacity = animValue;
+  
+  return (
+    <Animated.View
+      style={[
+        styles.messageContainer,
+        isUser ? styles.userMessageContainer : styles.doctorMessageContainer,
+        { opacity, transform: [{ translateY }] },
+      ]}>
+      {!isUser && (
+        <Image
+          source={{
+            uri: 'https://cdn-icons-png.flaticon.com/128/2785/2785482.png',
+          }}
+          style={styles.messageSenderAvatar}
+        />
+      )}
+      <View
+        style={[
+          styles.messageBubble,
+          isUser ? styles.userBubble : styles.doctorBubble,
+        ]}>
+        {message.image ? (
+          <Image source={{ uri: message.image }} style={styles.messageImage} />
+        ) : (
+          <Text
+            style={[
+              styles.messageText,
+              isUser ? styles.userText : styles.doctorText,
+            ]}>
+            {message.text}
+          </Text>
+        )}
+      </View>
+      {isUser && <Text style={styles.messageTime}>{message.time}</Text>}
+    </Animated.View>
+  );
+};
+
+const TypingIndicator = ({ isTyping }) => {
+  const [dot1] = useState(new Animated.Value(0));
+  const [dot2] = useState(new Animated.Value(0));
+  const [dot3] = useState(new Animated.Value(0));
+  
+  useEffect(() => {
+    const animateDots = () => {
+      Animated.sequence([
+        Animated.timing(dot1, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dot2, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dot3, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.parallel([
+          Animated.timing(dot1, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot2, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot3, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start(() => {
+        if (isTyping) animateDots();
+      });
+    };
+    
+    if (isTyping) {
+      animateDots();
+    }
+    
+    return () => {
+      dot1.setValue(0);
+      dot2.setValue(0);
+      dot3.setValue(0);
+    };
+  }, [isTyping, dot1, dot2, dot3]);
+  
+  const translateY1 = dot1.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -3],
+  });
+  
+  const translateY2 = dot2.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -3],
+  });
+  
+  const translateY3 = dot3.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -3],
+  });
+  
+  return (
+    <View style={styles.typingContainer}>
+      <Image
+        source={{
+          uri: 'https://cdn-icons-png.flaticon.com/128/2785/2785482.png',
+        }}
+        style={styles.typingAvatar}
+      />
+      <View style={styles.typingIndicator}>
+        <Animated.View
+          style={[
+            styles.typingDot,
+            { transform: [{ translateY: translateY1 }] },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.typingDot,
+            styles.typingDotMiddle,
+            { transform: [{ translateY: translateY2 }] },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.typingDot,
+            { transform: [{ translateY: translateY3 }] },
+          ]}
+        />
+      </View>
+    </View>
+  );
+};
+
+const MessageInput = ({ inputText, setInputText, setIsTyping, sendMessage }) => {
+  const [inputAnimation] = useState(new Animated.Value(0));
+  
+  useEffect(() => {
+    Animated.timing(inputAnimation, {
+      toValue: inputText.length > 0 ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [inputText]);
+  
+  const borderColor = inputAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#E0E0E0', '#4B7BEC'],
+  });
+  
+  const buttonScale = inputAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.05],
+  });
+  
+  return (
+    <View style={styles.inputContainer}>
+      <Animated.View
+        style={[
+          styles.inputWrapper,
+          { borderBottomColor: borderColor },
+        ]}>
+        <TextInput
+          style={styles.input}
+          placeholder="Type your message..."
+          value={inputText}
+          onChangeText={(text) => {
+            setInputText(text);
+            setIsTyping(text.length > 0);
+          }}
+          multiline
+        />
+      </Animated.View>
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <TouchableOpacity 
+          style={styles.sendButton} 
+          onPress={sendMessage}
+          activeOpacity={0.7}>
+          <Ionicons name="send" size={scale.font(22)} color="#fff" />
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+};
 
 const ChatScreen = ({ navigation }) => {
   const [messages, setMessages] = useState(initialMessages);
@@ -28,17 +281,43 @@ const ChatScreen = ({ navigation }) => {
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef(null);
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setBarStyle('dark-content');
+      StatusBar.setTranslucent(true);
+      StatusBar.setBackgroundColor('transparent');
+      
+      Animated.timing(headerOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+      
+      return () => {
+        headerOpacity.setValue(0);
+      };
+    }, [])
+  );
 
   useEffect(() => {
+    let timer;
     if (typing) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setTyping(false);
       }, 3000);
-      return () => clearTimeout(timer);
     }
+    return () => clearTimeout(timer);
   }, [typing]);
 
-  const sendMessage = () => {
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
+
+  const sendMessage = useCallback(() => {
     if (inputText.trim() === '') return;
 
     const newMessage = {
@@ -51,18 +330,14 @@ const ChatScreen = ({ navigation }) => {
       }),
     };
 
-    const updatedMessages = [...messages, newMessage];
-    setMessages(updatedMessages);
+    setMessages(prev => [...prev, newMessage]);
     setInputText('');
     setIsTyping(false);
 
-    // Simulate doctor typing
     setTyping(true);
-
-    // Simulate doctor response after 2 seconds
     setTimeout(() => {
       const doctorResponse = {
-        id: (updatedMessages.length + 1).toString(),
+        id: (messages.length + 2).toString(),
         text: 'Thank you for providing that information. Have you noticed any specific triggers for these headaches?',
         sender: 'doctor',
         time: new Date().toLocaleTimeString([], {
@@ -70,49 +345,10 @@ const ChatScreen = ({ navigation }) => {
           minute: '2-digit',
         }),
       };
-      setMessages((prevMessages) => [...prevMessages, doctorResponse]);
+      setMessages(prev => [...prev, doctorResponse]);
       setTyping(false);
     }, 2000);
-  };
-
-  const renderMessage = ({ item }) => {
-    const isUser = item.sender === 'user';
-
-    return (
-      <View
-        style={[
-          styles.messageContainer,
-          isUser ? styles.userMessageContainer : styles.doctorMessageContainer,
-        ]}>
-        {!isUser && (
-          <Image
-            source={{
-              uri: 'https://cdn-icons-png.flaticon.com/128/2785/2785482.png',
-            }}
-            style={styles.doctorAvatar}
-          />
-        )}
-        <View
-          style={[
-            styles.messageBubble,
-            isUser ? styles.userBubble : styles.doctorBubble,
-          ]}>
-          {item.image ? (
-            <Image source={{ uri: item.image }} style={styles.messageImage} />
-          ) : (
-            <Text
-              style={[
-                styles.messageText,
-                isUser ? styles.userText : styles.doctorText,
-              ]}>
-              {item.text}
-            </Text>
-          )}
-        </View>
-        {isUser && <Text style={styles.messageTime}>{item.time}</Text>}
-      </View>
-    );
-  };
+  }, [inputText, messages]);
 
   const renderDateSeparator = () => (
     <View style={styles.dateSeparator}>
@@ -121,153 +357,95 @@ const ChatScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={dynamicFontSize(24)} color="#555" />
-        </TouchableOpacity>
-        <View style={styles.doctorInfo}>
-          <Image
-            source={{
-              uri: 'https://cdn-icons-png.flaticon.com/128/2785/2785482.png',
-            }}
-            style={styles.doctorAvatar}
+    <>
+      <StatusBar 
+        translucent={true}
+        backgroundColor="transparent" 
+        barStyle="dark-content" 
+      />
+      
+      <SafeAreaView style={styles.safeArea}>
+        <Header navigation={navigation} opacity={headerOpacity} />
+        
+        <KeyboardAvoidingView
+          behavior={isIOS ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingContainer}
+          keyboardVerticalOffset={isIOS ? scale.h(5) : 0}>
+          
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={({ item, index }) => (
+              <MessageBubble 
+                message={item} 
+                animValue={new Animated.Value(0)}
+              />
+            )}
+            keyExtractor={(item) => item.id}
+            style={styles.messagesList}
+            contentContainerStyle={styles.messagesContent}
+            ListHeaderComponent={renderDateSeparator}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            showsVerticalScrollIndicator={false}
           />
-          <View>
-            <Text style={styles.doctorName}>Anonymous</Text>
-            <Text style={styles.doctorStatus}>Online</Text>
-          </View>
-        </View>
-      </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingContainer}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? dynamicHeight(10) : 0}>
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          style={styles.messagesList}
-          contentContainerStyle={styles.messagesContent}
-          ListHeaderComponent={renderDateSeparator}
-          onContentSizeChange={() =>
-            flatListRef.current.scrollToEnd({ animated: true })
-          }
-          onLayout={() => flatListRef.current.scrollToEnd({ animated: true })}
-          contentInset={{ bottom: Platform.OS === 'ios' ? dynamicHeight(10) : 0 }}
-          contentOffset={{ y: Platform.OS === 'ios' ? 0 : dynamicHeight(10) }}
-        />
-
-        {typing && (
-          <View style={styles.typingContainer}>
-            <Image
-              source={{
-                uri: 'https://cdn-icons-png.flaticon.com/128/2785/2785482.png',
-              }}
-              style={styles.typingAvatar}
-            />
-            <View style={styles.typingIndicator}>
-              <View
-                style={[
-                  styles.typingDot,
-                  { backgroundColor: typing ? '#4CAF50' : '#999' },
-                ]}
-              />
-              <View
-                style={[
-                  styles.typingDot,
-                  styles.typingDotMiddle,
-                  { backgroundColor: typing ? '#4CAF50' : '#999' },
-                ]}
-              />
-              <View
-                style={[
-                  styles.typingDot,
-                  { backgroundColor: typing ? '#4CAF50' : '#999' },
-                ]}
-              />
-            </View>
-          </View>
-        )}
-
-        <View style={styles.inputContainer}>
-          <View
-            style={[
-              styles.inputWrapper,
-              { borderBottomColor: isTyping ? '#4B7BEC' : '#E0E0E0' },
-            ]}>
-            <TextInput
-              style={styles.input}
-              placeholder="Type your message..."
-              value={inputText}
-              onChangeText={(text) => {
-                setInputText(text);
-                setIsTyping(text.length > 0);
-              }}
-              multiline
-              onFocus={() =>
-                flatListRef.current.scrollToEnd({ animated: true })
-              }
-            />
-          </View>
-          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-            <Ionicons name="send" size={dynamicFontSize(22)} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          {typing && <TypingIndicator isTyping={typing} />}
+          
+          <MessageInput
+            inputText={inputText}
+            setInputText={setInputText}
+            setIsTyping={setIsTyping}
+            sendMessage={sendMessage}
+          />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+    paddingTop: isIOS ? 0 : 0,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: dynamicWidth(3),
-    paddingVertical: dynamicHeight(2),
-    backgroundColor: '#fff',
+    paddingHorizontal: UI.spacing.md,
+    paddingTop: isIOS ? scale.h(4) : scale.h(4),
+    paddingBottom: UI.spacing.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+    elevation: 0,
+    shadowColor: 'transparent',
   },
   backButton: {
-    padding: dynamicWidth(1),
+    padding: UI.spacing.xs,
   },
   doctorInfo: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: dynamicWidth(3),
+    marginLeft: UI.spacing.md,
   },
   doctorAvatar: {
-    width: dynamicWidth(10),
-    height: dynamicWidth(10),
-    borderRadius: dynamicWidth(5),
-    marginRight: dynamicWidth(3),
+    width: UI.avatarSize,
+    height: UI.avatarSize,
+    borderRadius: UI.avatarSize / 2,
+    marginRight: UI.spacing.md,
     backgroundColor: '#E0E0E0',
   },
   doctorName: {
-    fontSize: dynamicFontSize(16),
+    fontSize: scale.font(16),
     fontWeight: '600',
     color: '#333',
   },
   doctorStatus: {
-    fontSize: dynamicFontSize(14),
+    fontSize: scale.font(14),
     color: '#4CAF50',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconButton: {
-    padding: dynamicWidth(2),
   },
   keyboardAvoidingContainer: {
     flex: 1,
@@ -276,24 +454,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   messagesContent: {
-    paddingVertical: dynamicHeight(2),
-    paddingBottom: Platform.OS === 'ios' ? dynamicHeight(10) : 0,
+    paddingVertical: UI.spacing.md,
+    paddingBottom: isIOS ? scale.h(10) : UI.spacing.lg,
   },
   dateSeparator: {
     alignItems: 'center',
-    marginBottom: dynamicHeight(2),
+    marginBottom: UI.spacing.md,
   },
   dateSeparatorText: {
-    fontSize: dynamicFontSize(14),
+    fontSize: scale.font(14),
     color: '#999',
     backgroundColor: '#F5F5F5',
-    paddingHorizontal: dynamicWidth(3),
-    paddingVertical: dynamicHeight(1),
+    paddingHorizontal: UI.spacing.md,
+    paddingVertical: UI.spacing.xs,
   },
   messageContainer: {
     flexDirection: 'row',
-    marginBottom: dynamicHeight(2),
-    paddingHorizontal: dynamicWidth(4),
+    marginBottom: UI.spacing.md,
+    paddingHorizontal: UI.spacing.lg,
     alignItems: 'flex-end',
   },
   userMessageContainer: {
@@ -302,24 +480,36 @@ const styles = StyleSheet.create({
   doctorMessageContainer: {
     justifyContent: 'flex-start',
   },
+  messageSenderAvatar: {
+    width: UI.smallAvatarSize,
+    height: UI.smallAvatarSize,
+    borderRadius: UI.smallAvatarSize / 2,
+    marginRight: UI.spacing.md,
+    backgroundColor: '#E0E0E0',
+  },
   messageBubble: {
     maxWidth: '75%',
-    paddingHorizontal: dynamicWidth(4),
-    paddingVertical: dynamicHeight(1.5),
-    borderRadius: dynamicWidth(5),
+    paddingHorizontal: UI.spacing.lg,
+    paddingVertical: UI.spacing.md,
+    borderRadius: UI.borderRadius,
   },
   userBubble: {
     backgroundColor: '#4B7BEC',
     borderBottomRightRadius: 5,
-    marginRight: dynamicWidth(3),
+    marginRight: UI.spacing.md,
   },
   doctorBubble: {
     backgroundColor: '#FFFFFF',
     borderBottomLeftRadius: 5,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
   },
   messageText: {
-    fontSize: dynamicFontSize(14),
-    lineHeight: dynamicHeight(2.5),
+    fontSize: scale.font(14),
+    lineHeight: scale.h(2.5),
   },
   userText: {
     color: '#FFFFFF',
@@ -328,49 +518,55 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   messageTime: {
-    fontSize: dynamicFontSize(12),
+    fontSize: scale.font(12),
     color: '#999',
   },
   messageImage: {
-    width: dynamicWidth(50),
-    height: dynamicWidth(50),
-    borderRadius: dynamicWidth(3),
+    width: scale.w(50),
+    height: scale.w(50),
+    borderRadius: scale.w(3),
   },
   typingContainer: {
     flexDirection: 'row',
-    paddingHorizontal: dynamicWidth(4),
-    paddingVertical: dynamicHeight(1.5),
+    paddingHorizontal: UI.spacing.lg,
+    paddingVertical: UI.spacing.sm,
     alignItems: 'center',
   },
   typingAvatar: {
-    width: dynamicWidth(8),
-    height: dynamicWidth(8),
-    borderRadius: dynamicWidth(4),
-    marginRight: dynamicWidth(3),
+    width: UI.smallAvatarSize,
+    height: UI.smallAvatarSize,
+    borderRadius: UI.smallAvatarSize / 2,
+    marginRight: UI.spacing.md,
     backgroundColor: '#E0E0E0',
   },
   typingIndicator: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: dynamicWidth(3),
-    paddingVertical: dynamicHeight(1),
-    borderRadius: dynamicWidth(4),
+    paddingHorizontal: UI.spacing.md,
+    paddingVertical: UI.spacing.sm,
+    borderRadius: UI.borderRadius,
     alignItems: 'center',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
   },
   typingDot: {
-    width: dynamicWidth(1.5),
-    height: dynamicWidth(1.5),
-    borderRadius: dynamicWidth(0.75),
-    marginHorizontal: dynamicWidth(0.5),
-    opacity: 0.6,
+    width: scale.w(1.5),
+    height: scale.w(1.5),
+    borderRadius: scale.w(0.75),
+    marginHorizontal: scale.w(0.7),
+    backgroundColor: '#4CAF50',
   },
   typingDotMiddle: {
-    opacity: 0.8,
+    width: scale.w(1.5),
+    height: scale.w(1.5),
   },
   inputContainer: {
     flexDirection: 'row',
-    paddingHorizontal: dynamicWidth(3),
-    paddingVertical: dynamicHeight(1.5),
+    paddingHorizontal: UI.spacing.md,
+    paddingVertical: UI.spacing.md,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
@@ -378,23 +574,24 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flex: 1,
-    borderBottomWidth: 1,
-    marginHorizontal: dynamicWidth(2),
+    borderBottomWidth: 1.5,
+    marginHorizontal: UI.spacing.sm,
+    borderRadius: UI.spacing.xs,
   },
   input: {
-    fontSize: dynamicFontSize(14),
-    paddingHorizontal: dynamicWidth(3),
-    paddingVertical: dynamicHeight(1),
-    maxHeight: dynamicHeight(15),
+    fontSize: scale.font(14),
+    paddingHorizontal: UI.spacing.md,
+    paddingVertical: UI.spacing.sm,
+    maxHeight: scale.h(15),
   },
   sendButton: {
     backgroundColor: '#4B7BEC',
-    width: dynamicWidth(10),
-    height: dynamicWidth(10),
-    borderRadius: dynamicWidth(5),
+    width: UI.avatarSize,
+    height: UI.avatarSize,
+    borderRadius: UI.avatarSize / 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: dynamicWidth(3),
+    marginLeft: UI.spacing.md,
   },
 });
 
