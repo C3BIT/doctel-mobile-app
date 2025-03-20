@@ -24,7 +24,7 @@ const AuthStack = () => (
 
 const AppStack = () => (
   <Stack.Navigator
-    screenOptions={{ animation: "slide_from_right", headerShown: false }}
+    screenOptions={{ animation: "slide_from_bottom", headerShown: false }}
   >
     <Stack.Screen
       name="TabNavigator"
