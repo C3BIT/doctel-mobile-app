@@ -40,11 +40,23 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
         { text: "OK", onPress: handleEndCall },
       ]);
     };
+    const handleDoctorEndedCall = (data) => {
+      console.log("Doctor ended call:", data);
+      if (jitsiMeetingRef.current) {
+        try {
+          jitsiMeetingRef.current.close();
+        } catch (error) {
+          console.error("Error closing Jitsi meeting:", error);
+        }
+      }
+      navigation.goBack();
+    };
 
     socket.on("doctor:disconnected", handleDoctorDisconnected);
-
+    socket.on("doctor:ended_call", handleDoctorEndedCall);
     return () => {
       socket.off("doctor:disconnected", handleDoctorDisconnected);
+      socket.off("doctor:ended_call", handleDoctorEndedCall);
     };
   }, [socket]);
 
@@ -54,7 +66,7 @@ const JitsiMeetingScreen = ({ route, navigation }) => {
     }
     
     if (socket?.connected) {
-      socket.emit("call:end");
+      socket.emit("patient:callend");
       console.log("Call ended by patient");
     }
 
