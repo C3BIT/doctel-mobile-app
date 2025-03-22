@@ -22,21 +22,19 @@ import { WaveBackground } from "./../components/common/WaveBackground";
 import * as ImagePicker from "expo-image-picker";
 import Loader from "../components/common/Loader";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchPatientProfile,
-  updatePatientProfile,
-  clearPatientProfileError,
+import { 
+  fetchPatientProfile, 
+  updatePatientProfile, 
+  clearPatientProfileError 
 } from "../redux/features/patient/patientSlice";
-import { isEqual } from "lodash";
+import { isEqual } from 'lodash';
 import FlashMessage from './../components/shared/FlashMessage';
 
 export const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
-  const { isLoading, updateLoading, profile, status, error } = useSelector(
-    (state) => state.patient
-  );
-
+  const { isLoading, updateLoading, profile, status, error } = useSelector((state) => state.patient);
+  
   const [screenDimensions, setScreenDimensions] = useState(
     Dimensions.get("window")
   );
@@ -45,13 +43,14 @@ export const ProfileScreen = ({ navigation }) => {
   );
   const [isImageChanged, setIsImageChanged] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     bloodGroup: "",
     gender: "",
     dateOfBirth: "",
-    mobileNumber: "",
-    height: "",
-    weight: "",
+    phone: "",
+    height: null,
+    weight: null
   });
   const [initialProfile, setInitialProfile] = useState({});
 
@@ -61,27 +60,49 @@ export const ProfileScreen = ({ navigation }) => {
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
   const genders = ["Male", "Female", "Other"];
-
+  
   useEffect(() => {
     if (profile) {
       const formattedProfile = {
-        name: profile.name || "",
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
         bloodGroup: profile.bloodGroup || "A+",
         gender: profile.gender || "Male",
-        dateOfBirth: profile.dateOfBirth || "",
-        mobileNumber: profile.mobileNumber || "",
+        dateOfBirth: profile.dateOfBirth ? formatDateToISOString(profile.dateOfBirth) : "",
+        phone: profile.phone || "",
         height: profile.height ? profile.height.toString() : "",
         weight: profile.weight ? profile.weight.toString() : "",
       };
-
+      
       setProfileData(formattedProfile);
       setInitialProfile(formattedProfile);
-
+      
       if (profile.profileImage) {
         setProfileImage({ uri: profile.profileImage });
       }
     }
   }, [profile]);
+
+  const formatDateToISOString = (dateString) => {
+    if (!dateString) return "";
+    
+    let date;
+    
+    if (dateString.includes('/')) {
+      const parts = dateString.split('/');
+      date = new Date(parts[0], parts[1] - 1, parts[2]);
+    } else if (dateString.includes('-')) {
+      return dateString;
+    } else {
+      date = new Date(dateString);
+    }
+    
+    if (isNaN(date.getTime())) {
+      return "";
+    }
+    
+    return date.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     if (status === "updated") {
@@ -130,35 +151,36 @@ export const ProfileScreen = ({ navigation }) => {
 
   const handleUpdate = async () => {
     if (!isFormDirty()) return;
-
+    
     try {
       const formData = new FormData();
-      Object.keys(profileData).forEach((key) => {
-        if (profileData[key] !== null && profileData[key] !== undefined) {
+      
+      Object.keys(profileData).forEach(key => {
+        if (profileData[key] !== null && profileData[key] !== undefined && 
+            key !== 'phone') {
           formData.append(key, profileData[key]);
         }
       });
-
+      
       if (isImageChanged && profileImage.uri) {
         const imageUri = profileImage.uri;
-        const filename = imageUri.split("/").pop();
+        const filename = imageUri.split('/').pop();
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : "image";
-
-        formData.append("profileImage", {
+        const type = match ? `image/${match[1]}` : 'image';
+        
+        formData.append('profileImage', {
           uri: imageUri,
           name: filename,
           type,
         });
       }
-
-      await dispatch(
-        updatePatientProfile({
-          profileData: formData,
-          token,
-        })
-      ).unwrap();
-      setInitialProfile({ ...profileData });
+      
+      await dispatch(updatePatientProfile({
+        profileData: formData,
+        token
+      })).unwrap();
+      
+      setInitialProfile({...profileData});
       setIsImageChanged(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -166,7 +188,7 @@ export const ProfileScreen = ({ navigation }) => {
   };
 
   const handleDateSelect = (date) => {
-    const formattedDate = date.toISOString().split("T")[0].replace(/-/g, "/");
+    const formattedDate = date.toISOString().split("T")[0];
     setProfileData({ ...profileData, dateOfBirth: formattedDate });
     setShowDatePicker(false);
   };
@@ -285,6 +307,10 @@ export const ProfileScreen = ({ navigation }) => {
     backButton: {
       padding: 8,
     },
+    readOnlyInput: {
+      backgroundColor: "#f0f0f0",
+      color: "#666",
+    }
   });
 
   return (
@@ -293,7 +319,7 @@ export const ProfileScreen = ({ navigation }) => {
         <Loader />
       ) : (
         <SafeAreaView style={styles.container} edges={["left", "right"]}>
-          {/* <StatusBar barStyle="light-content" backgroundColor="#23C2FF" /> */}
+          <StatusBar barStyle="light-content" backgroundColor="#23C2FF" />
 
           <View style={dynamicStyles.header}>
             <TouchableOpacity
@@ -335,13 +361,24 @@ export const ProfileScreen = ({ navigation }) => {
                     <View style={dynamicStyles.cardContent}>
                       <View style={dynamicStyles.spacer} />
 
-                      <Input
-                        label="First name & Last name"
-                        value={profileData.name}
-                        onChangeText={(text) =>
-                          setProfileData({ ...profileData, name: text })
-                        }
-                      />
+                      <View style={styles.row}>
+                        <Input
+                          label="First Name"
+                          value={profileData.firstName}
+                          onChangeText={(text) =>
+                            setProfileData({ ...profileData, firstName: text })
+                          }
+                          containerStyle={styles.halfInput}
+                        />
+                        <Input
+                          label="Last Name"
+                          value={profileData.lastName}
+                          onChangeText={(text) =>
+                            setProfileData({ ...profileData, lastName: text })
+                          }
+                          containerStyle={styles.halfInput}
+                        />
+                      </View>
 
                       <View style={styles.row}>
                         <Dropdown
@@ -375,15 +412,15 @@ export const ProfileScreen = ({ navigation }) => {
                         isVisible={showDatePicker}
                         onDateSelect={handleDateSelect}
                         onCancel={() => setShowDatePicker(false)}
+                        format="YYYY-MM-DD"
                       />
 
                       <Input
-                        label="Mobile Number"
-                        value={profileData.mobileNumber}
-                        onChangeText={(text) =>
-                          setProfileData({ ...profileData, mobileNumber: text })
-                        }
+                        label="Phone Number"
+                        value={profileData.phone}
+                        editable={false}
                         keyboardType="phone-pad"
+                        style={dynamicStyles.readOnlyInput}
                       />
 
                       <View style={styles.row}>

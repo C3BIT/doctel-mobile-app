@@ -65,7 +65,7 @@ const patientSlice = createSlice({
       })
       .addCase(updatePatientProfile.fulfilled, (state, action) => {
         state.updateLoading = false;
-        state.profile = action.payload.data;
+        state.profile = action.payload;
         state.status = "updated";
       })
       .addCase(updatePatientProfile.rejected, (state, action) => {
