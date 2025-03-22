@@ -68,10 +68,10 @@ export const ProfileScreen = ({ navigation }) => {
         lastName: profile.lastName || "",
         bloodGroup: profile.bloodGroup || "A+",
         gender: profile.gender || "Male",
-        dateOfBirth: profile.dateOfBirth ? formatDateToISOString(profile.dateOfBirth) : "",
+        dateOfBirth: "1999/09/21",
         phone: profile.phone || "",
-        height: profile.height ? profile.height.toString() : "",
-        weight: profile.weight ? profile.weight.toString() : "",
+        height: profile.height !== null && profile.height !== undefined ? profile.height.toString() : "",
+        weight: profile.weight !== null && profile.weight !== undefined ? profile.weight.toString() : "",
       };
       
       setProfileData(formattedProfile);
@@ -82,27 +82,6 @@ export const ProfileScreen = ({ navigation }) => {
       }
     }
   }, [profile]);
-
-  const formatDateToISOString = (dateString) => {
-    if (!dateString) return "";
-    
-    let date;
-    
-    if (dateString.includes('/')) {
-      const parts = dateString.split('/');
-      date = new Date(parts[0], parts[1] - 1, parts[2]);
-    } else if (dateString.includes('-')) {
-      return dateString;
-    } else {
-      date = new Date(dateString);
-    }
-    
-    if (isNaN(date.getTime())) {
-      return "";
-    }
-    
-    return date.toISOString().split('T')[0];
-  };
 
   useEffect(() => {
     if (status === "updated") {
@@ -155,10 +134,19 @@ export const ProfileScreen = ({ navigation }) => {
     try {
       const formData = new FormData();
       
-      Object.keys(profileData).forEach(key => {
-        if (profileData[key] !== null && profileData[key] !== undefined && 
+      const dataToSend = {...profileData};
+      if (dataToSend.height) {
+        dataToSend.height = parseFloat(dataToSend.height);
+      }
+      
+      if (dataToSend.weight) {
+        dataToSend.weight = parseFloat(dataToSend.weight);
+      }
+      
+      Object.keys(dataToSend).forEach(key => {
+        if (dataToSend[key] !== null && dataToSend[key] !== undefined && 
             key !== 'phone') {
-          formData.append(key, profileData[key]);
+          formData.append(key, dataToSend[key]);
         }
       });
       
@@ -188,8 +176,8 @@ export const ProfileScreen = ({ navigation }) => {
   };
 
   const handleDateSelect = (date) => {
-    const formattedDate = date.toISOString().split("T")[0];
-    setProfileData({ ...profileData, dateOfBirth: formattedDate });
+    const formattedDate = date.toISOString().split("T")[0].replace(/-/g, "/");
+    setProfile({ ...profile, dateOfBirth: formattedDate });
     setShowDatePicker(false);
   };
 
@@ -201,6 +189,13 @@ export const ProfileScreen = ({ navigation }) => {
   const handleSelectGender = (value) => {
     setProfileData({ ...profileData, gender: value });
     setShowGenderDropdown(false);
+  };
+
+  const validateNumericInput = (text, fieldName) => {
+    const numericRegex = /^(\d*\.?\d*)$/;
+    if (text === '' || numericRegex.test(text)) {
+      setProfileData({ ...profileData, [fieldName]: text });
+    }
   };
 
   const handleImageUpload = async () => {
@@ -310,6 +305,14 @@ export const ProfileScreen = ({ navigation }) => {
     readOnlyInput: {
       backgroundColor: "#f0f0f0",
       color: "#666",
+    },
+    inputWrapper: {
+      height: 60,
+    },
+    phoneWrapper: {
+      height: 60,
+      marginTop: 20,
+      marginBottom: 10,
     }
   });
 
@@ -319,7 +322,6 @@ export const ProfileScreen = ({ navigation }) => {
         <Loader />
       ) : (
         <SafeAreaView style={styles.container} edges={["left", "right"]}>
-          <StatusBar barStyle="light-content" backgroundColor="#23C2FF" />
 
           <View style={dynamicStyles.header}>
             <TouchableOpacity
@@ -368,7 +370,7 @@ export const ProfileScreen = ({ navigation }) => {
                           onChangeText={(text) =>
                             setProfileData({ ...profileData, firstName: text })
                           }
-                          containerStyle={styles.halfInput}
+                          containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
                         />
                         <Input
                           label="Last Name"
@@ -376,7 +378,7 @@ export const ProfileScreen = ({ navigation }) => {
                           onChangeText={(text) =>
                             setProfileData({ ...profileData, lastName: text })
                           }
-                          containerStyle={styles.halfInput}
+                          containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
                         />
                       </View>
 
@@ -390,7 +392,7 @@ export const ProfileScreen = ({ navigation }) => {
                           onToggle={() =>
                             setShowBloodGroupDropdown(!showBloodGroupDropdown)
                           }
-                          containerStyle={styles.halfInput}
+                          containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
                         />
                         <Dropdown
                           label="Gender"
@@ -401,46 +403,47 @@ export const ProfileScreen = ({ navigation }) => {
                           onToggle={() =>
                             setShowGenderDropdown(!showGenderDropdown)
                           }
-                          containerStyle={styles.halfInput}
+                          containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
                         />
                       </View>
 
-                      <DatePicker
-                        label="Date of birth"
-                        value={profileData.dateOfBirth}
-                        onPress={() => setShowDatePicker(true)}
-                        isVisible={showDatePicker}
-                        onDateSelect={handleDateSelect}
-                        onCancel={() => setShowDatePicker(false)}
-                        format="YYYY-MM-DD"
-                      />
+                      <View style={dynamicStyles.inputWrapper}>
+                        <DatePicker
+                          label="Date of birth"
+                          value={profileData.dateOfBirth}
+                          onPress={() => setShowDatePicker(true)}
+                          isVisible={showDatePicker}
+                          onDateSelect={handleDateSelect}
+                          onCancel={() => setShowDatePicker(false)}
+                        />
+                      </View>
 
-                      <Input
-                        label="Phone Number"
-                        value={profileData.phone}
-                        editable={false}
-                        keyboardType="phone-pad"
-                        style={dynamicStyles.readOnlyInput}
-                      />
+                      <View style={dynamicStyles.phoneWrapper}>
+                        <Input
+                          label="Phone Number"
+                          value={profileData.phone}
+                          editable={false}
+                          keyboardType="phone-pad"
+                          style={dynamicStyles.readOnlyInput}
+                        />
+                      </View>
 
                       <View style={styles.row}>
                         <Input
                           label="Height (m)"
                           value={profileData.height}
-                          onChangeText={(text) =>
-                            setProfileData({ ...profileData, height: text })
-                          }
+                          onChangeText={(text) => validateNumericInput(text, 'height')}
                           keyboardType="decimal-pad"
-                          containerStyle={styles.halfInput}
+                          containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
+                          placeholder="0.00"
                         />
                         <Input
                           label="Weight (kg)"
                           value={profileData.weight}
-                          onChangeText={(text) =>
-                            setProfileData({ ...profileData, weight: text })
-                          }
+                          onChangeText={(text) => validateNumericInput(text, 'weight')}
                           keyboardType="decimal-pad"
-                          containerStyle={styles.halfInput}
+                          containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
+                          placeholder="0.00"
                         />
                       </View>
 
@@ -500,6 +503,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginBottom: 10,
     gap: 12,
   },
   halfInput: {
