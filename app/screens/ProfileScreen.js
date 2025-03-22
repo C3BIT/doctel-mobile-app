@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Dimensions,
   TouchableOpacity,
-  Alert,
   StatusBar,
   Text,
 } from "react-native";
@@ -22,8 +21,22 @@ import { DatePicker } from "../components/common/DatePicker";
 import { WaveBackground } from "./../components/common/WaveBackground";
 import * as ImagePicker from "expo-image-picker";
 import Loader from "../components/common/Loader";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  fetchPatientProfile,
+  updatePatientProfile,
+  clearPatientProfileError,
+} from "../redux/features/patient/patientSlice";
+import { isEqual } from "lodash";
+import FlashMessage from './../components/shared/FlashMessage';
 
 export const ProfileScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const { token } = useSelector((state) => state.auth);
+  const { isLoading, updateLoading, profile, status, error } = useSelector(
+    (state) => state.patient
+  );
+
   const [screenDimensions, setScreenDimensions] = useState(
     Dimensions.get("window")
   );
@@ -31,16 +44,16 @@ export const ProfileScreen = ({ navigation }) => {
     require("../assets/avatar.png")
   );
   const [isImageChanged, setIsImageChanged] = useState(false);
-  const [profile, setProfile] = useState({
-    name: "Amar name ki",
-    bloodGroup: "O+",
-    gender: "Male",
-    dateOfBirth: "1999/09/21",
-    mobileNumber: "0123 456 789",
-    height: "1.65",
-    weight: "48",
+  const [profileData, setProfileData] = useState({
+    name: "",
+    bloodGroup: "",
+    gender: "",
+    dateOfBirth: "",
+    mobileNumber: "",
+    height: "",
+    weight: "",
   });
-  const [initialProfile, setInitialProfile] = useState({ ...profile });
+  const [initialProfile, setInitialProfile] = useState({});
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showBloodGroupDropdown, setShowBloodGroupDropdown] = useState(false);
@@ -48,6 +61,41 @@ export const ProfileScreen = ({ navigation }) => {
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
   const genders = ["Male", "Female", "Other"];
+
+  useEffect(() => {
+    if (profile) {
+      const formattedProfile = {
+        name: profile.name || "",
+        bloodGroup: profile.bloodGroup || "A+",
+        gender: profile.gender || "Male",
+        dateOfBirth: profile.dateOfBirth || "",
+        mobileNumber: profile.mobileNumber || "",
+        height: profile.height ? profile.height.toString() : "",
+        weight: profile.weight ? profile.weight.toString() : "",
+      };
+
+      setProfileData(formattedProfile);
+      setInitialProfile(formattedProfile);
+
+      if (profile.profileImage) {
+        setProfileImage({ uri: profile.profileImage });
+      }
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (status === "updated") {
+      FlashMessage.success("Profile updated successfully");
+      dispatch(clearPatientProfileError());
+    } else if (status === "update_failed" && error) {
+      FlashMessage.error(error);
+      dispatch(clearPatientProfileError());
+    }
+  }, [status, error, dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchPatientProfile(token));
+  }, [dispatch, token]);
 
   useEffect(() => {
     const dimensionsHandler = ({ window }) => {
@@ -64,9 +112,8 @@ export const ProfileScreen = ({ navigation }) => {
         const { status } =
           await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") {
-          Alert.alert(
-            "Permission required",
-            "Sorry, we need camera roll permissions to upload images!"
+          FlashMessage.error(
+            "We need camera roll permissions to upload images!"
           );
         }
       }
@@ -77,46 +124,60 @@ export const ProfileScreen = ({ navigation }) => {
     };
   }, []);
 
-  const handleUpdate = () => {
-    const changedFields = {};
+  const isFormDirty = () => {
+    return !isEqual(profileData, initialProfile) || isImageChanged;
+  };
 
-    Object.keys(profile).forEach((key) => {
-      if (profile[key] !== initialProfile[key]) {
-        changedFields[key] = {
-          from: initialProfile[key],
-          to: profile[key],
-        };
+  const handleUpdate = async () => {
+    if (!isFormDirty()) return;
+
+    try {
+      const formData = new FormData();
+      Object.keys(profileData).forEach((key) => {
+        if (profileData[key] !== null && profileData[key] !== undefined) {
+          formData.append(key, profileData[key]);
+        }
+      });
+
+      if (isImageChanged && profileImage.uri) {
+        const imageUri = profileImage.uri;
+        const filename = imageUri.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : "image";
+
+        formData.append("profileImage", {
+          uri: imageUri,
+          name: filename,
+          type,
+        });
       }
-    });
 
-    if (isImageChanged) {
-      changedFields.profileImage = {
-        changed: true,
-        details:
-          typeof profileImage === "string"
-            ? "Image selected from device"
-            : "Default avatar",
-      };
+      await dispatch(
+        updatePatientProfile({
+          profileData: formData,
+          token,
+        })
+      ).unwrap();
+      setInitialProfile({ ...profileData });
+      setIsImageChanged(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
     }
-
-    console.log("Profile updated with changes:", changedFields);
-    setInitialProfile({ ...profile });
-    Alert.alert("Success", "Profile updated successfully");
   };
 
   const handleDateSelect = (date) => {
     const formattedDate = date.toISOString().split("T")[0].replace(/-/g, "/");
-    setProfile({ ...profile, dateOfBirth: formattedDate });
+    setProfileData({ ...profileData, dateOfBirth: formattedDate });
     setShowDatePicker(false);
   };
 
   const handleSelectBloodGroup = (value) => {
-    setProfile({ ...profile, bloodGroup: value });
+    setProfileData({ ...profileData, bloodGroup: value });
     setShowBloodGroupDropdown(false);
   };
 
   const handleSelectGender = (value) => {
-    setProfile({ ...profile, gender: value });
+    setProfileData({ ...profileData, gender: value });
     setShowGenderDropdown(false);
   };
 
@@ -132,19 +193,16 @@ export const ProfileScreen = ({ navigation }) => {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setProfileImage({ uri: result.assets[0].uri });
         setIsImageChanged(true);
-        console.log("Image selected:", result.assets[0].uri);
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      Alert.alert("Error", "Failed to select image. Please try again.");
+      FlashMessage.error("Failed to select image. Please try again.");
     }
   };
 
   const handleBackPress = () => {
     if (navigation && navigation.goBack) {
       navigation.goBack();
-    } else {
-      console.log("Back button pressed");
     }
   };
 
@@ -169,8 +227,6 @@ export const ProfileScreen = ({ navigation }) => {
       flexGrow: 1,
       paddingVertical: baseUnit * 0.7,
       paddingHorizontal: baseUnit * 0.4,
-      // alignItems: 'center',
-      // justifyContent: 'center',
       top: screenDimensions.height * 0.05,
       minHeight: screenDimensions.height - headerHeight,
     },
@@ -208,6 +264,7 @@ export const ProfileScreen = ({ navigation }) => {
     updateButton: {
       paddingVertical: baseUnit * 0.5,
       marginTop: baseUnit * 0.7,
+      opacity: isFormDirty() ? 1 : 0.5,
     },
     header: {
       height: headerHeight,
@@ -229,21 +286,14 @@ export const ProfileScreen = ({ navigation }) => {
       padding: 8,
     },
   });
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
 
-    return () => clearTimeout(timer);
-  }, []);
   return (
     <>
-      {loading ? (
+      {isLoading ? (
         <Loader />
       ) : (
         <SafeAreaView style={styles.container} edges={["left", "right"]}>
-          <StatusBar barStyle="light-content" backgroundColor="#23C2FF" />
+          {/* <StatusBar barStyle="light-content" backgroundColor="#23C2FF" /> */}
 
           <View style={dynamicStyles.header}>
             <TouchableOpacity
@@ -287,16 +337,16 @@ export const ProfileScreen = ({ navigation }) => {
 
                       <Input
                         label="First name & Last name"
-                        value={profile.name}
+                        value={profileData.name}
                         onChangeText={(text) =>
-                          setProfile({ ...profile, name: text })
+                          setProfileData({ ...profileData, name: text })
                         }
                       />
 
                       <View style={styles.row}>
                         <Dropdown
                           label="Blood group"
-                          value={profile.bloodGroup}
+                          value={profileData.bloodGroup}
                           options={bloodGroups}
                           onSelect={handleSelectBloodGroup}
                           isOpen={showBloodGroupDropdown}
@@ -307,7 +357,7 @@ export const ProfileScreen = ({ navigation }) => {
                         />
                         <Dropdown
                           label="Gender"
-                          value={profile.gender}
+                          value={profileData.gender}
                           options={genders}
                           onSelect={handleSelectGender}
                           isOpen={showGenderDropdown}
@@ -320,7 +370,7 @@ export const ProfileScreen = ({ navigation }) => {
 
                       <DatePicker
                         label="Date of birth"
-                        value={profile.dateOfBirth}
+                        value={profileData.dateOfBirth}
                         onPress={() => setShowDatePicker(true)}
                         isVisible={showDatePicker}
                         onDateSelect={handleDateSelect}
@@ -329,9 +379,9 @@ export const ProfileScreen = ({ navigation }) => {
 
                       <Input
                         label="Mobile Number"
-                        value={profile.mobileNumber}
+                        value={profileData.mobileNumber}
                         onChangeText={(text) =>
-                          setProfile({ ...profile, mobileNumber: text })
+                          setProfileData({ ...profileData, mobileNumber: text })
                         }
                         keyboardType="phone-pad"
                       />
@@ -339,18 +389,18 @@ export const ProfileScreen = ({ navigation }) => {
                       <View style={styles.row}>
                         <Input
                           label="Height (m)"
-                          value={profile.height}
+                          value={profileData.height}
                           onChangeText={(text) =>
-                            setProfile({ ...profile, height: text })
+                            setProfileData({ ...profileData, height: text })
                           }
                           keyboardType="decimal-pad"
                           containerStyle={styles.halfInput}
                         />
                         <Input
                           label="Weight (kg)"
-                          value={profile.weight}
+                          value={profileData.weight}
                           onChangeText={(text) =>
-                            setProfile({ ...profile, weight: text })
+                            setProfileData({ ...profileData, weight: text })
                           }
                           keyboardType="decimal-pad"
                           containerStyle={styles.halfInput}
@@ -358,8 +408,9 @@ export const ProfileScreen = ({ navigation }) => {
                       </View>
 
                       <Button
-                        title="Update"
+                        title={updateLoading ? "Updating..." : "Update"}
                         onPress={handleUpdate}
+                        disabled={!isFormDirty() || updateLoading}
                         style={{
                           ...styles.updateButton,
                           ...dynamicStyles.updateButton,
