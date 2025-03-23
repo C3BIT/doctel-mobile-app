@@ -20,7 +20,6 @@ import { Dropdown } from "../components/common/Dropdown";
 import { DatePicker } from "../components/common/DatePicker";
 import { WaveBackground } from "./../components/common/WaveBackground";
 import * as ImagePicker from "expo-image-picker";
-import Loader from "../components/common/Loader";
 import { useSelector, useDispatch } from "react-redux";
 import { 
   fetchPatientProfile, 
@@ -29,6 +28,7 @@ import {
 } from "../redux/features/patient/patientSlice";
 import { isEqual } from 'lodash';
 import FlashMessage from './../components/shared/FlashMessage';
+import { ProfileSkeleton } from "../components/skeleton/ProfileSkeleton";
 
 export const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -68,7 +68,7 @@ export const ProfileScreen = ({ navigation }) => {
         lastName: profile.lastName || "",
         bloodGroup: profile.bloodGroup || "A+",
         gender: profile.gender || "Male",
-        dateOfBirth: "1999/09/21",
+        dateOfBirth: profile.dateOfBirth ||"1999/09/21",
         phone: profile.phone || "",
         height: profile.height !== null && profile.height !== undefined ? profile.height.toString() : "",
         weight: profile.weight !== null && profile.weight !== undefined ? profile.weight.toString() : "",
@@ -176,8 +176,7 @@ export const ProfileScreen = ({ navigation }) => {
   };
 
   const handleDateSelect = (date) => {
-    const formattedDate = date.toISOString().split("T")[0].replace(/-/g, "/");
-    setProfile({ ...profile, dateOfBirth: formattedDate });
+    setProfileData({ ...profileData, dateOfBirth: date });
     setShowDatePicker(false);
   };
 
@@ -319,7 +318,7 @@ export const ProfileScreen = ({ navigation }) => {
   return (
     <>
       {isLoading ? (
-        <Loader />
+        <ProfileSkeleton />
       ) : (
         <SafeAreaView style={styles.container} edges={["left", "right"]}>
 
