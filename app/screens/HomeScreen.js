@@ -51,7 +51,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.appointmentContainer}>
-        <TouchableOpacity style={styles.appointmentButton}>
+        <TouchableOpacity style={styles.appointmentButton} onPress={() => navigation.navigate('Prescription')}>
           <View style={styles.appointmentContent}>
             <View style={styles.iconContainer}>
               <Image

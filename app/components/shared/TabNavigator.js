@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View, Dimensions, Text, Platform, TouchableOpacity, PixelRatio } from "react-native";
 import PackageScreen from "../../screens/PackageScreen";
