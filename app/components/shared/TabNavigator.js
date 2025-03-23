@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View, Dimensions, Text, Platform, TouchableOpacity, PixelRatio } from "react-native";
 import PackageScreen from "../../screens/PackageScreen";
@@ -18,6 +18,12 @@ const normalizeFontSize = (size) => {
   const scale = width / 375;
   const newSize = size * scale;
   return Math.round(PixelRatio.roundToNearestPixel(newSize));
+};
+
+const ProfileScreenWrapper = (props) => {
+  const isFirstRender = useRef(true);
+  
+  return <ProfileScreen {...props} />;
 };
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
@@ -110,12 +116,26 @@ const TabNavigator = () => {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: '#EAEFF5' }
+        cardStyle: { backgroundColor: '#EAEFF5' },
+        lazy: false,
+        unmountOnBlur: false,
       }}
     >
-      <Tab.Screen name="Packages" component={PackageScreen} />
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen 
+        name="Packages" 
+        component={PackageScreen} 
+      />
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreenWrapper} 
+        options={{
+          id: 'profile-screen',
+        }}
+      />
     </Tab.Navigator>
   );
 };
@@ -201,4 +221,5 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 });
+
 export default TabNavigator;

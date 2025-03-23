@@ -18,12 +18,55 @@ export const DatePicker = ({
   onDateSelect,
   onCancel,
 }) => {
-  const parseDateString = (dateStr) => {
-    const [year, month, day] = dateStr.split('/');
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const parseDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    
+    try {
+      if (dateStr.includes('-')) {
+        return new Date(dateStr + 'T00:00:00');
+      }
+      
+      if (dateStr.includes('/')) {
+        const [year, month, day] = dateStr.split('/');
+        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      }
+      
+      return new Date();
+    } catch (error) {
+      console.error('Error parsing date:', error);
+      return new Date();
+    }
   };
 
-  const selectedDate = value ? parseDateString(value) : new Date();
+  const formatDateForDisplay = (dateStr) => {
+    if (!dateStr) return '';
+    
+    try {
+      const date = parseDate(dateStr);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return dateStr;
+    }
+  };
+
+  const selectedDate = parseDate(value);
+  const displayDate = formatDateForDisplay(value);
+
+  const toISODateString = (date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateSelect = (date) => {
+    const isoDate = toISODateString(date);
+    onDateSelect(isoDate);
+  };
 
   return (
     <View style={styles.container}>
@@ -33,7 +76,7 @@ export const DatePicker = ({
         onPress={onPress}
         activeOpacity={0.7}
       >
-        <Text style={styles.dateText}>{value}</Text>
+        <Text style={styles.dateText}>{displayDate || 'Select date'}</Text>
         <Calendar size={20} color="#666" />
       </TouchableOpacity>
 
@@ -50,7 +93,7 @@ export const DatePicker = ({
                   <TouchableOpacity onPress={onCancel}>
                     <Text style={styles.cancelText}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => onDateSelect(selectedDate)}>
+                  <TouchableOpacity onPress={() => handleDateSelect(selectedDate)}>
                     <Text style={styles.doneText}>Done</Text>
                   </TouchableOpacity>
                 </View>
@@ -59,7 +102,7 @@ export const DatePicker = ({
                   mode="date"
                   display="spinner"
                   onChange={(event, date) => {
-                    if (date) onDateSelect(date);
+    
                   }}
                   style={styles.iosDatePicker}
                 />
@@ -73,7 +116,7 @@ export const DatePicker = ({
             display="default"
             onChange={(event, date) => {
               onCancel();
-              if (date && event.type === 'set') onDateSelect(date);
+              if (date && event.type === 'set') handleDateSelect(date);
             }}
           />
         )
