@@ -4,64 +4,82 @@ import {
   Text, 
   TouchableOpacity, 
   StyleSheet, 
-  Dimensions, 
-  Platform 
+  Dimensions 
 } from 'react-native';
 import PrescriptionIcon from '../../assets/icons/Prescription.svg';
 import UploadIcon from '../../assets/icons/Upload.svg';
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
+const BASE_WIDTH = 375;
 
-const dynamicWidth = (percentage) => (width * percentage) / 100;
-const dynamicHeight = (percentage) => (height * percentage) / 100;
-const dynamicFontSize = (size) => (width * size) / 375;
+const responsiveWidth = (w) => (width * w) / BASE_WIDTH;
+const responsiveFontSize = (size) => (width * size) / BASE_WIDTH;
 
-const UploadDocuments = ({navigation}) => {
+const UploadDocuments = ({ navigation }) => {
+  const documentTypes = [
+    {
+      icon: PrescriptionIcon,
+      title: 'Prescription',
+      subtitle: 'View Your Previous Prescription',
+      navigateTo: 'Prescription'
+    },
+    {
+      icon: UploadIcon,
+      title: 'Upload',
+      subtitle: 'Upload Lab reports, prescription etc',
+      navigateTo: 'Upload'
+    }
+  ];
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.documentCard}    onPress={() => navigation.navigate('Prescription')}>
-        <View style={styles.iconContainer}>
-          <PrescriptionIcon 
-            width={dynamicWidth(8)} 
-            height={dynamicWidth(8)} 
-          />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.cardTitle}>Prescription</Text>
-          <Text style={styles.cardSubtitle}>View Your Previous Prescription</Text>
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.documentCard}>
-        <View style={styles.iconContainer}>
-          <UploadIcon 
-            width={dynamicWidth(8)} 
-            height={dynamicWidth(8)} 
-          />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.cardTitle}>Upload</Text>
-          <Text style={styles.cardSubtitle}>Upload Lab reports, prescription etc</Text>
-        </View>
-      </TouchableOpacity>
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionTitle}>Upload Documents</Text>
+      <View style={styles.container}>
+        {documentTypes.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <TouchableOpacity 
+              key={index}
+              style={styles.documentCard}
+              onPress={() => navigation.navigate(item.navigateTo)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.iconContainer}>
+                <Icon width={45} height={45} />
+              </View>
+              <View>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  sectionContainer: {
+    marginTop: responsiveWidth(10),
+  },
+  sectionTitle: {
+    fontSize: responsiveFontSize(18),
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: responsiveWidth(10),
+    paddingHorizontal: responsiveWidth(16),
+  },
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: dynamicHeight(1),
-    paddingBottom: dynamicHeight(2.5),
   },
   documentCard: {
-    width: dynamicWidth(45),
+    flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: dynamicWidth(3),
+    borderRadius: 10,
+    padding: responsiveWidth(16),
+    marginHorizontal: responsiveWidth(5),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -69,22 +87,18 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   iconContainer: {
-    marginRight: dynamicWidth(3),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  textContainer: {
-    flex: 1,
+    marginBottom: responsiveWidth(10),
   },
   cardTitle: {
-    fontSize: dynamicFontSize(16),
+    fontSize: responsiveFontSize(16),
     fontWeight: '600',
     color: '#333333',
+    marginBottom: responsiveWidth(4),
   },
   cardSubtitle: {
-    fontSize: dynamicFontSize(12),
+    fontSize: responsiveFontSize(12),
     color: '#666666',
-    marginTop: dynamicHeight(0.5),
+    lineHeight: responsiveFontSize(16),
   },
 });
 

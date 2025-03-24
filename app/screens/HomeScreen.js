@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     padding: dynamicWidth(4),
   },
   scrollViewContent: {
-    paddingBottom: BOTTOM_TAB_HEIGHT + dynamicHeight(3),
+    paddingBottom: BOTTOM_TAB_HEIGHT + dynamicHeight(4),
   },
   floatingButton: {
     position: 'absolute',
