@@ -14,12 +14,15 @@ import CustomLanguageSwitch from "../components/common/CustomLanguageSwitch";
 import WellnessCard from "../components/common/WellnessCard";
 import CallFeature from "../components/common/CallFeature";
 import MessageIcon from '../assets/message_icon.svg';
+import UploadDocuments from "../components/Prescription/UploadDocuments";
+import AppointmentContainer from './../components/AppointmentContainer/AppointmentContainer';
 
 const { width, height } = Dimensions.get("window");
 const dynamicWidth = (percentage) => (width * percentage) / 100;
 const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
+const BOTTOM_TAB_HEIGHT = Platform.OS === 'ios' ? 90 : 60;
 const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
@@ -50,28 +53,13 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.appointmentContainer}>
-        <TouchableOpacity style={styles.appointmentButton} onPress={() => navigation.navigate('Prescription')}>
-          <View style={styles.appointmentContent}>
-            <View style={styles.iconContainer}>
-              <Image
-                source={require("../assets/calender.png")}
-                style={styles.calendarIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <View>
-              <Text style={styles.appointmentText}>Book Appointment</Text>
-              <Text style={styles.appointmentSubtext}>
-                View Your Previous Call History
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.contentContainer}>
-        <CallFeature />
+      <ScrollView 
+        style={styles.contentContainer}
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        <AppointmentContainer />
+        <CallFeature  />
+        <UploadDocuments navigation={navigation}/> 
       </ScrollView>
 
       <TouchableOpacity
@@ -140,52 +128,20 @@ const styles = StyleSheet.create({
   wellnessCardContainer: {
     paddingHorizontal: dynamicWidth(5),
   },
-  appointmentContainer: {
-    backgroundColor: "#FFFFFF",
-    padding: dynamicWidth(4),
-  },
   contentContainer: {
     flex: 1,
     backgroundColor: "#FFFFFF",
     padding: dynamicWidth(4),
   },
-  appointmentButton: {
-    backgroundColor: "#192F5D",
-    borderRadius: 12,
-    padding: dynamicWidth(4),
-  },
-  appointmentContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    width: dynamicWidth(10),
-    height: dynamicWidth(10),
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: dynamicWidth(4),
-  },
-  calendarIcon: {
-    width: dynamicWidth(5),
-    height: dynamicWidth(5),
-  },
-  appointmentText: {
-    color: "#fff",
-    fontSize: dynamicFontSize(16),
-    fontWeight: "600",
-  },
-  appointmentSubtext: {
-    color: "#fff",
-    opacity: 0.8,
-    fontSize: dynamicFontSize(12),
-    marginTop: dynamicHeight(0.5),
+  scrollViewContent: {
+    paddingBottom: BOTTOM_TAB_HEIGHT + dynamicHeight(3),
   },
   floatingButton: {
     position: 'absolute',
     right: dynamicWidth(5),
-    bottom: Platform.OS === 'ios' ? dynamicHeight(10) : dynamicHeight(8),
+    bottom: Platform.OS === 'ios' 
+      ? dynamicHeight(4) + BOTTOM_TAB_HEIGHT 
+      : dynamicHeight(3) + BOTTOM_TAB_HEIGHT,
     backgroundColor: '#1E3A8A',
     borderRadius: 30,
     width: dynamicWidth(12),

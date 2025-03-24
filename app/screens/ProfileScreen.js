@@ -162,6 +162,8 @@ export const ProfileScreen = ({ navigation }) => {
           type,
         });
       }
+
+      console.log({formData})
       
       await dispatch(updatePatientProfile({
         profileData: formData,
@@ -429,7 +431,7 @@ export const ProfileScreen = ({ navigation }) => {
 
                       <View style={styles.row}>
                         <Input
-                          label="Height (m)"
+                          label="Height (cm)"
                           value={profileData.height}
                           onChangeText={(text) => validateNumericInput(text, 'height')}
                           keyboardType="decimal-pad"
