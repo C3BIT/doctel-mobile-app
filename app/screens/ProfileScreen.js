@@ -130,7 +130,6 @@ export const ProfileScreen = ({ navigation }) => {
 
   const handleUpdate = async () => {
     if (!isFormDirty()) return;
-    
     try {
       const formData = new FormData();
       
@@ -156,15 +155,13 @@ export const ProfileScreen = ({ navigation }) => {
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image';
         
-        formData.append('profileImage', {
+        formData.append('file', {
           uri: imageUri,
           name: filename,
           type,
         });
       }
-
-      console.log({formData})
-      
+   
       await dispatch(updatePatientProfile({
         profileData: formData,
         token
