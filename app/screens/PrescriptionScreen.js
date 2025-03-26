@@ -179,12 +179,14 @@ const PrescriptionScreen = ({ navigation }) => {
         transparent={false}
         onRequestClose={closePdfViewer}
       >
-        <View style={[styles.pdfContainer, { paddingTop: insets.top }]}>
+        <View style={[styles.pdfContainer, 
+          // { paddingTop: insets.top }
+          ]}>
           <View style={styles.pdfHeader}>
             <TouchableOpacity 
               onPress={closePdfViewer} 
               style={styles.closePdfButton}
-              hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+              hitSlop={{ top: 5, right: 10, bottom: 10, left: 10 }}
             >
               <Feather name="x" size={normalize(24)} color="#1a3b5d" />
             </TouchableOpacity>
@@ -327,18 +329,18 @@ const styles = StyleSheet.create({
   },
   pdfContainer: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'red',
   },
   pdfHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: wp(4),
-    paddingVertical: hp(1.5),
+    // paddingVertical: hp(1),
     borderBottomWidth: 1,
     borderBottomColor: '#e1e8ed',
     backgroundColor: 'white',
-    height: hp(7),
+    // height: hp(7),
     zIndex: 10,
   },
   closePdfButton: {
@@ -349,7 +351,7 @@ const styles = StyleSheet.create({
     height: normalize(40),
   },
   pdfHeaderTitle: {
-    fontSize: normalize(18),
+    fontSize: normalize(15),
     fontWeight: '600',
     color: '#1a3b5d',
   },
