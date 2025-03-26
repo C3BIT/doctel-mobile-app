@@ -16,7 +16,7 @@ const CustomLanguageSwitch = () => {
   const toggleSwitch = () => {
     Animated.timing(switchAnim, {
       toValue: isEnglish ? 1 : 0,
-      duration: 300,
+      duration: 600,
       useNativeDriver: false,
     }).start();
     setIsEnglish(!isEnglish);
