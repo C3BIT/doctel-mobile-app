@@ -30,7 +30,7 @@ import { isEqual } from 'lodash';
 import FlashMessage from './../components/shared/FlashMessage';
 import { ProfileSkeleton } from "../components/skeleton/ProfileSkeleton";
 
-export const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
   const { isLoading, updateLoading, profile, status, error } = useSelector((state) => state.patient);
@@ -516,3 +516,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 });
+
+export default ProfileScreen;
