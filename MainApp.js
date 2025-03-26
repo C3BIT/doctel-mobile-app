@@ -12,6 +12,7 @@ import ChatScreen from "./app/screens/ChatScreen";
 import TabNavigator from "./app/components/shared/TabNavigator";
 import { WebSocketProvider } from "./app/providers/WebSocketProvider";
 import JitsiMeetingScreen from "./app/components/Calling/JitsiMeetingScreen";
+import PrescriptionScreen from "./app/screens/PrescriptionScreen";
 enableScreens();
 const Stack = createNativeStackNavigator();
 LogBox.ignoreAllLogs();
@@ -40,6 +41,7 @@ const AppStack = () => (
       }}
     />
     <Stack.Screen name="Chat" component={ChatScreen} />
+    <Stack.Screen name="Prescription" component={PrescriptionScreen} />
   </Stack.Navigator>
 );
 
