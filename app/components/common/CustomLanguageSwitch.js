@@ -16,7 +16,7 @@ const CustomLanguageSwitch = () => {
   const toggleSwitch = () => {
     Animated.timing(switchAnim, {
       toValue: isEnglish ? 1 : 0,
-      duration: 500,
+      duration: 300,
       useNativeDriver: false,
     }).start();
     setIsEnglish(!isEnglish);
@@ -33,7 +33,14 @@ const CustomLanguageSwitch = () => {
         <Text style={[styles.label, styles.labelEN, { fontSize: textSize, color: isEnglish ? '#20ACE2' : '#999' }]}>EN</Text>
         <Text style={[styles.label, styles.labelBN, { fontSize: textSize, color: isEnglish ? '#999' : '#20ACE2' }]}>BN</Text>
         <Animated.View 
-          style={[styles.switchThumb, { width: thumbSize, height: thumbSize, transform: [{ translateX: interpolatedPosition }] }]}
+          style={[
+            styles.switchThumb, 
+            { 
+              width: thumbSize, 
+              height: thumbSize, 
+              transform: [{ translateX: interpolatedPosition }] 
+            }
+          ]}
         >
           <Text style={[styles.switchText, { fontSize: textSize }]}>{isEnglish ? 'EN' : 'BN'}</Text>
         </Animated.View>
