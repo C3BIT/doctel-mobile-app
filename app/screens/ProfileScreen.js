@@ -319,7 +319,7 @@ export const ProfileScreen = ({ navigation }) => {
       {isLoading ? (
         <ProfileSkeleton />
       ) : (
-        <SafeAreaView style={styles.container} edges={["left", "right"]}>
+        <SafeAreaView style={styles.container}  edges={["left", "right", "bottom"]}>
 
           <View style={dynamicStyles.header}>
             <TouchableOpacity
@@ -337,8 +337,12 @@ export const ProfileScreen = ({ navigation }) => {
               style={styles.keyboardView}
             >
               <ScrollView
-                contentContainerStyle={dynamicStyles.scrollContent}
+                 contentContainerStyle={[
+                  dynamicStyles.scrollContent,
+                  { paddingBottom: 100 }
+                ]}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled" 
               >
                 <View style={styles.cardWrapper}>
                   <View style={styles.avatarOuterContainer}>

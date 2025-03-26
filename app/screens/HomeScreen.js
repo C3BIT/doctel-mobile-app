@@ -50,14 +50,13 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EAEFF5",
+    backgroundColor: "transparent",
   },
   rootContent: {
     flex: 1,
   },
   contentContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
     padding: dynamicWidth(3),
   },
   scrollViewContent: {
