@@ -30,7 +30,7 @@ import { isEqual } from 'lodash';
 import FlashMessage from './../components/shared/FlashMessage';
 import { ProfileSkeleton } from "../components/skeleton/ProfileSkeleton";
 
-export const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
   const { isLoading, updateLoading, profile, status, error } = useSelector((state) => state.patient);
@@ -130,7 +130,6 @@ export const ProfileScreen = ({ navigation }) => {
 
   const handleUpdate = async () => {
     if (!isFormDirty()) return;
-    
     try {
       const formData = new FormData();
       
@@ -156,13 +155,13 @@ export const ProfileScreen = ({ navigation }) => {
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image';
         
-        formData.append('profileImage', {
+        formData.append('file', {
           uri: imageUri,
           name: filename,
           type,
         });
       }
-      
+   
       await dispatch(updatePatientProfile({
         profileData: formData,
         token
@@ -320,7 +319,7 @@ export const ProfileScreen = ({ navigation }) => {
       {isLoading ? (
         <ProfileSkeleton />
       ) : (
-        <SafeAreaView style={styles.container} edges={["left", "right"]}>
+        <SafeAreaView style={styles.container}  edges={["left", "right", "bottom"]}>
 
           <View style={dynamicStyles.header}>
             <TouchableOpacity
@@ -338,8 +337,12 @@ export const ProfileScreen = ({ navigation }) => {
               style={styles.keyboardView}
             >
               <ScrollView
-                contentContainerStyle={dynamicStyles.scrollContent}
+                 contentContainerStyle={[
+                  dynamicStyles.scrollContent,
+                  { paddingBottom: 100 }
+                ]}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled" 
               >
                 <View style={styles.cardWrapper}>
                   <View style={styles.avatarOuterContainer}>
@@ -429,7 +432,7 @@ export const ProfileScreen = ({ navigation }) => {
 
                       <View style={styles.row}>
                         <Input
-                          label="Height (m)"
+                          label="Height (cm)"
                           value={profileData.height}
                           onChangeText={(text) => validateNumericInput(text, 'height')}
                           keyboardType="decimal-pad"
@@ -513,3 +516,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 });
+
+export default ProfileScreen;

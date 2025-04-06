@@ -144,21 +144,20 @@ const CallFeature = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   title: {
-    fontSize: dynamicFontSize(18),
+    fontSize: dynamicFontSize(16),
     fontWeight: "700",
     color: "#0E4946",
-    marginBottom: dynamicHeight(2),
+    marginBottom: dynamicHeight(1),
   },
   optionContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    padding: dynamicWidth(4),
-    marginBottom: dynamicHeight(2),
+    padding: dynamicWidth(3),
+    marginBottom: dynamicHeight(1),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

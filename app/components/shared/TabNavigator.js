@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View, Dimensions, Text, Platform, TouchableOpacity, PixelRatio } from "react-native";
 import PackageScreen from "../../screens/PackageScreen";
-import { ProfileScreen } from "./../../screens/ProfileScreen";
+import ProfileScreen  from "./../../screens/ProfileScreen";
 import HomeScreen from "./../../screens/HomeScreen";
 import { Svg, Path } from "react-native-svg";
 import HomeIcon from "../../assets/home_icon.svg";

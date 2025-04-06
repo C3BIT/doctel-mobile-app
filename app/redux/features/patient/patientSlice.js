@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { privateGet, privatePutFile } from '../../../utils/apiCaller';
+import { privateGet, privatePutFile } from "../../../utils/apiCaller";
 
 export const fetchPatientProfile = createAsyncThunk(
   "patient/fetchProfile",
-  async (token , { rejectWithValue }) => {
+  async (token, { rejectWithValue }) => {
     try {
       const response = await privateGet("/patient/profile", token);
       return response.data;
@@ -17,7 +17,11 @@ export const updatePatientProfile = createAsyncThunk(
   "patient/updateProfile",
   async ({ profileData, token }, { rejectWithValue }) => {
     try {
-      const response = await privatePutFile("/patient/update/profile",token, profileData);
+      const response = await privatePutFile(
+        "/patient/update/profile",
+        token,
+        profileData
+      );
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to update profile");
@@ -57,7 +61,7 @@ const patientSlice = createSlice({
         state.error = action.payload?.message || "Failed to fetch profile";
         state.status = "failed";
       })
-      
+
       .addCase(updatePatientProfile.pending, (state) => {
         state.updateLoading = true;
         state.error = null;
@@ -70,7 +74,10 @@ const patientSlice = createSlice({
       })
       .addCase(updatePatientProfile.rejected, (state, action) => {
         state.updateLoading = false;
-        state.error = action.payload?.message || "Failed to update profile";
+        state.error =
+          action.payload?.error?.details[0]?.message ||
+          action.payload?.message ||
+          "Failed to update profile";
         state.status = "update_failed";
       });
   },
