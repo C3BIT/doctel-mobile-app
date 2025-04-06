@@ -9,11 +9,11 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnable
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
-// import org.devio.rn.splashscreen.SplashScreen;
+import org.devio.rn.splashscreen.SplashScreen;
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    // SplashScreen.show(this);
+    SplashScreen.show(this, true)
     setTheme(R.style.AppTheme);
     super.onCreate(null)
   }

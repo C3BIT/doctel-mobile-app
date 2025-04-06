@@ -5,8 +5,16 @@ import { StatusBar } from "react-native";
 import MainApp from "./MainApp";
 import Loader from "./app/components/common/Loader";
 import store from "./app/redux/store";
-
+import SplashScreen from "react-native-splash-screen";
 export default function App() {
+  useEffect(() => {
+    const hideSplashScreen = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      SplashScreen.hide();
+    };
+
+    hideSplashScreen();
+  }, []);
   return (
     <Provider store={store}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
