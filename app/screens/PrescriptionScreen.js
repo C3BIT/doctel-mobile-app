@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
   FlatList,
   Dimensions,
   Modal,
@@ -12,16 +12,21 @@ import {
   ActivityIndicator,
   BackHandler,
   AppState,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
-import { WebView } from 'react-native-webview';
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
+import { WebView } from "react-native-webview";
 
-import PdfIcon from '../assets/icons/pdf.svg';
-import DeleteIcon from '../assets/icons/trash.svg';
+import PdfIcon from "../assets/icons/pdf.svg";
+import DeleteIcon from "../assets/icons/trash.svg";
+import { useDispatch } from "react-redux";
+import { fetchPrescriptions } from "../redux/features/prescriptions/prescriptionSlice";
+import { useSelector } from "react-redux";
+import Loader from "../components/common/Loader";
+import { formatDate } from "../utils/constants";
 
-const window = Dimensions.get('window');
+const window = Dimensions.get("window");
 const { width, height } = window;
 const scale = Math.min(width, height) / 375;
 
@@ -31,13 +36,15 @@ const hp = (percentage) => height * (percentage / 100);
 
 const PrescriptionScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  
-  const [prescriptions, setPrescriptions] = useState([
-    { id: '1', name: 'Prescription 01', date: '24 Jul 07 05:12:13', status: 'Completed', pdfUrl: 'https://www.antennahouse.com/hubfs/xsl-fo-sample/pdf/basic-link-1.pdf' },
-    { id: '2', name: 'Prescription 02', date: '24 Jul 07 05:12:13', status: 'Completed', pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' },
-    { id: '3', name: 'Prescription 03', date: '24 Jul 07 05:12:13', status: 'Completed', pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' },
-    { id: '4', name: 'Prescription 04', date: '24 Jul 07 05:12:13', status: 'Completed', pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' },
-  ]);
+  const dispatch = useDispatch();
+  const { token } = useSelector((state) => state.auth);
+  const { list, isLoading, error } = useSelector(
+    (state) => state.prescriptions
+  );
+  useEffect(() => {
+    dispatch(fetchPrescriptions(token));
+  }, [dispatch]);
+
 
   const [selectedPdf, setSelectedPdf] = useState(null);
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
@@ -55,8 +62,8 @@ const PrescriptionScreen = ({ navigation }) => {
   );
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (appState === 'active' && nextAppState.match(/inactive|background/)) {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (appState === "active" && nextAppState.match(/inactive|background/)) {
         if (pdfModalVisible) {
           closePdfViewer();
         }
@@ -70,13 +77,16 @@ const PrescriptionScreen = ({ navigation }) => {
   }, [appState, pdfModalVisible]);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (pdfModalVisible) {
-        closePdfViewer();
-        return true;
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (pdfModalVisible) {
+          closePdfViewer();
+          return true;
+        }
+        return false;
       }
-      return false;
-    });
+    );
 
     return () => backHandler.remove();
   }, [pdfModalVisible]);
@@ -87,14 +97,17 @@ const PrescriptionScreen = ({ navigation }) => {
       "Are you sure you want to delete this prescription?",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          onPress: () => setPrescriptions(prescriptions.filter(item => item.id !== id)),
-          style: "destructive"
-        }
+        {
+          text: "Delete",
+          onPress: () => {
+            console.log("Delete prescription id:", id);
+          },
+          style: "destructive",
+        },
       ]
     );
   };
+
   const goBack = () => {
     if (navigation && navigation.goBack) {
       navigation.goBack();
@@ -104,10 +117,13 @@ const PrescriptionScreen = ({ navigation }) => {
     setSelectedPdf(pdfUrl);
     setPdfLoading(true);
     setPdfError(false);
-    const finalUrl = Platform.OS === 'android' 
-      ? `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true` 
-      : pdfUrl;
-    
+    const finalUrl =
+      Platform.OS === "android"
+        ? `https://docs.google.com/viewer?url=${encodeURIComponent(
+            pdfUrl
+          )}&embedded=true`
+        : pdfUrl;
+
     setWebViewSource({ uri: finalUrl });
     setPdfModalVisible(true);
   };
@@ -116,7 +132,7 @@ const PrescriptionScreen = ({ navigation }) => {
     setPdfModalVisible(false);
     setPdfLoading(false);
     setPdfError(false);
-  
+
     setTimeout(() => {
       setWebViewSource(null);
       setSelectedPdf(null);
@@ -125,9 +141,9 @@ const PrescriptionScreen = ({ navigation }) => {
 
   const renderPrescriptionItem = ({ item }) => (
     <View style={styles.prescriptionItem}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.itemContent}
-        onPress={() => openPdfInWebView(item.pdfUrl)}
+        onPress={() => openPdfInWebView(item.prescriptionURL)}
         activeOpacity={0.7}
       >
         <View style={styles.pdfIconContainer}>
@@ -135,11 +151,13 @@ const PrescriptionScreen = ({ navigation }) => {
         </View>
         <View style={styles.prescriptionDetails}>
           <Text style={styles.prescriptionName}>{item.name}</Text>
-          <Text style={styles.prescriptionDate}>{item.date} • <Text style={styles.statusCompleted}>{item.status}</Text></Text>
+          <Text style={styles.prescriptionDate}>{item.date}
+             {/* • <Text style={styles.statusCompleted}>{item.status}</Text> */}
+             </Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.deleteButton} 
+      <TouchableOpacity
+        style={styles.deleteButton}
         onPress={() => handleDeletePrescription(item.id)}
         hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
       >
@@ -151,7 +169,7 @@ const PrescriptionScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { paddingTop: insets.top - hp(2.5) }]}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={goBack}
           hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
@@ -161,30 +179,41 @@ const PrescriptionScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Prescription</Text>
         <View style={styles.rightPlaceholder} />
       </View>
-
-      <FlatList
-        data={prescriptions}
-        renderItem={renderPrescriptionItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.prescriptionList}
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={6}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-      />
-
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <FlatList
+          data={list.map((item, index) => ({
+            ...item,
+            name: `Prescription ${index + 1}`,
+            id: item.id || `${index}`,
+            status: 'Completed',
+            date: formatDate(item.createdAt)
+          }))}
+          renderItem={renderPrescriptionItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.prescriptionList}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={6}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+        />
+      )}
       <Modal
         visible={pdfModalVisible}
         animationType="slide"
         transparent={false}
         onRequestClose={closePdfViewer}
       >
-        <View style={[styles.pdfContainer, 
-          // { paddingTop: insets.top }
-          ]}>
+        <View
+          style={[
+            styles.pdfContainer,
+            // { paddingTop: insets.top }
+          ]}
+        >
           <View style={styles.pdfHeader}>
-            <TouchableOpacity 
-              onPress={closePdfViewer} 
+            <TouchableOpacity
+              onPress={closePdfViewer}
               style={styles.closePdfButton}
               hitSlop={{ top: 5, right: 10, bottom: 10, left: 10 }}
             >
@@ -193,7 +222,7 @@ const PrescriptionScreen = ({ navigation }) => {
             <Text style={styles.pdfHeaderTitle}>Prescription</Text>
             <View style={styles.rightPlaceholder} />
           </View>
-          
+
           <View style={styles.pdfWrapper}>
             {pdfLoading && (
               <View style={styles.loadingIndicator}>
@@ -201,12 +230,16 @@ const PrescriptionScreen = ({ navigation }) => {
                 <Text style={styles.loadingText}>Loading PDF...</Text>
               </View>
             )}
-            
+
             {pdfError && (
               <View style={styles.errorContainer}>
-                <Feather name="alert-circle" size={normalize(50)} color="#e74c3c" />
+                <Feather
+                  name="alert-circle"
+                  size={normalize(50)}
+                  color="#e74c3c"
+                />
                 <Text style={styles.errorText}>Failed to load PDF</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.retryButton}
                   onPress={() => {
                     if (selectedPdf) {
@@ -220,12 +253,12 @@ const PrescriptionScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             )}
-            
+
             {webViewSource && (
               <WebView
                 source={webViewSource}
                 style={styles.webView}
-                originWhitelist={['*']}
+                originWhitelist={["*"]}
                 javaScriptEnabled={true}
                 domStorageEnabled={true}
                 startInLoadingState={true}
@@ -234,7 +267,7 @@ const PrescriptionScreen = ({ navigation }) => {
                 onLoad={() => setPdfLoading(false)}
                 onLoadEnd={() => setPdfLoading(false)}
                 onError={(error) => {
-                  console.log('WebView Error:', error);
+                  console.log("WebView Error:", error);
                   setPdfLoading(false);
                   setPdfError(true);
                 }}
@@ -250,30 +283,30 @@ const PrescriptionScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: "#f5f7fa",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: wp(4),
     paddingVertical: hp(1.5),
     borderBottomWidth: 1,
-    borderBottomColor: '#e1e8ed',
-    backgroundColor: '#f5f7fa',
+    borderBottomColor: "#e1e8ed",
+    backgroundColor: "#f5f7fa",
     height: hp(7),
   },
   backButton: {
     padding: normalize(8),
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     width: normalize(35),
     height: normalize(35),
   },
   headerTitle: {
     fontSize: normalize(15),
-    fontWeight: '600',
-    color: '#1a3b5d',
+    fontWeight: "600",
+    color: "#1a3b5d",
   },
   rightPlaceholder: {
     width: normalize(40),
@@ -283,14 +316,14 @@ const styles = StyleSheet.create({
     paddingBottom: hp(2),
   },
   prescriptionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
     borderRadius: normalize(10),
     marginBottom: hp(1.5),
     padding: normalize(10),
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -298,14 +331,14 @@ const styles = StyleSheet.create({
   },
   itemContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   pdfIconContainer: {
     height: normalize(30),
     width: normalize(30),
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: normalize(12),
   },
   prescriptionDetails: {
@@ -313,98 +346,98 @@ const styles = StyleSheet.create({
   },
   prescriptionName: {
     fontSize: normalize(16),
-    fontWeight: '600',
-    color: '#1a3b5d',
+    fontWeight: "600",
+    color: "#1a3b5d",
     marginBottom: normalize(4),
   },
   prescriptionDate: {
     fontSize: normalize(14),
-    color: '#667b94',
+    color: "#667b94",
   },
   statusCompleted: {
-    color: '#4caf50',
+    color: "#4caf50",
   },
   deleteButton: {
     padding: normalize(8),
   },
   pdfContainer: {
     flex: 1,
-    backgroundColor: 'red',
+    backgroundColor: "red",
   },
   pdfHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: wp(4),
     // paddingVertical: hp(1),
     borderBottomWidth: 1,
-    borderBottomColor: '#e1e8ed',
-    backgroundColor: 'white',
+    borderBottomColor: "#e1e8ed",
+    backgroundColor: "white",
     // height: hp(7),
     zIndex: 10,
   },
   closePdfButton: {
     padding: normalize(8),
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     width: normalize(40),
     height: normalize(40),
   },
   pdfHeaderTitle: {
     fontSize: normalize(15),
-    fontWeight: '600',
-    color: '#1a3b5d',
+    fontWeight: "600",
+    color: "#1a3b5d",
   },
   pdfWrapper: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    backgroundColor: '#f5f7fa',
+    justifyContent: "flex-start",
+    alignItems: "center",
+    backgroundColor: "#f5f7fa",
   },
   loadingIndicator: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
     zIndex: 1,
   },
   loadingText: {
     marginTop: normalize(12),
     fontSize: normalize(16),
-    color: '#1a3b5d',
+    color: "#1a3b5d",
   },
   webView: {
     flex: 1,
     width: width,
     height: height - hp(7),
-    backgroundColor: '#f5f7fa',
+    backgroundColor: "#f5f7fa",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f7fa',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f7fa",
   },
   errorText: {
     fontSize: normalize(18),
-    color: '#1a3b5d',
+    color: "#1a3b5d",
     marginTop: normalize(20),
     marginBottom: normalize(20),
   },
   retryButton: {
     paddingHorizontal: normalize(20),
     paddingVertical: normalize(10),
-    backgroundColor: '#1a3b5d',
+    backgroundColor: "#1a3b5d",
     borderRadius: normalize(8),
   },
   retryText: {
-    color: 'white',
+    color: "white",
     fontSize: normalize(16),
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 
