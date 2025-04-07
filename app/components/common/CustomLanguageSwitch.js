@@ -1,90 +1,148 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, Pressable, Animated, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { getLanguagePreference, saveLanguagePreference } from '../../storage/storage';
 
-const { width, height } = Dimensions.get('window');
-const switchWidth = width * 0.2;
-const switchHeight = height * 0.04;
-const thumbSize = switchHeight * 0.7;
-const textSize = switchWidth * 0.14;
-const paddingSize = switchWidth * 0.03;
-const positionOffset = switchWidth * 0.08;
-
-const CustomLanguageSwitch = () => {
+const LanguageSwitch = () => {
   const [isEnglish, setIsEnglish] = useState(true);
-  const switchAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  
+  const { width: screenWidth } = Dimensions.get('window');
+  
+  const switchWidth = Math.min(Math.max(80, screenWidth * 0.20), 100);
+  const switchHeight = switchWidth * 0.4; 
+  const thumbSize = switchHeight * 0.7;
+  const fontSize = switchHeight * 0.35;
+  const padding = switchHeight * 0.15;
+  const borderWidth = Math.max(1, switchHeight * 0.04);
+  const thumbOffset = borderWidth + padding;
+  
+  useEffect(() => {
+    const loadPref = async () => {
+      const saved = await getLanguagePreference();
+      setIsEnglish(saved);
+      slideAnim.setValue(saved ? thumbOffset : switchWidth - thumbSize - thumbOffset);
+    };
+    loadPref();
+  }, [slideAnim, switchWidth, thumbSize, thumbOffset]);
 
-  const toggleSwitch = () => {
-    Animated.timing(switchAnim, {
-      toValue: isEnglish ? 1 : 0,
-      duration: 600,
-      useNativeDriver: false,
+  const toggleLanguage = () => {
+    const newLang = !isEnglish;
+    setIsEnglish(newLang);
+    saveLanguagePreference(newLang);
+
+    Animated.timing(slideAnim, {
+      toValue: newLang ? thumbOffset : switchWidth - thumbSize - thumbOffset,
+      duration: 200,
+      useNativeDriver: true,
     }).start();
-    setIsEnglish(!isEnglish);
   };
 
-  const interpolatedPosition = switchAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [positionOffset, switchWidth - thumbSize - positionOffset],
-  });
-
   return (
-    <Pressable onPress={toggleSwitch} style={styles.container}>
-      <View style={[styles.switchBackground, { width: switchWidth, height: switchHeight }]}>
-        <Text style={[styles.label, styles.labelEN, { fontSize: textSize, color: isEnglish ? '#20ACE2' : '#999' }]}>EN</Text>
-        <Text style={[styles.label, styles.labelBN, { fontSize: textSize, color: isEnglish ? '#999' : '#20ACE2' }]}>BN</Text>
-        <Animated.View 
+    <View style={[styles.container, { padding: switchHeight * 0.1 }]}>
+      <Pressable
+        onPress={toggleLanguage}
+        style={[
+          styles.track,
+          {
+            width: switchWidth,
+            height: switchHeight,
+            borderRadius: switchHeight / 2,
+            borderWidth: borderWidth,
+            shadowRadius: switchHeight * 0.1,
+            shadowOffset: { width: 0, height: switchHeight * 0.05 },
+          },
+        ]}
+      >
+        {!isEnglish && (
+          <Text
+            style={[
+              styles.label,
+              {
+                fontSize: fontSize,
+                left: switchWidth * 0.15,
+              },
+            ]}
+          >
+            EN
+          </Text>
+        )}
+
+        {isEnglish && (
+          <Text
+            style={[
+              styles.label,
+              {
+                fontSize: fontSize,
+                right: switchWidth * 0.15,
+              },
+            ]}
+          >
+            BN
+          </Text>
+        )}
+
+        <Animated.View
           style={[
-            styles.switchThumb, 
-            { 
-              width: thumbSize, 
-              height: thumbSize, 
-              transform: [{ translateX: interpolatedPosition }] 
-            }
+            styles.thumb,
+            {
+              width: thumbSize,
+              height: thumbSize,
+              borderRadius: thumbSize / 2,
+              transform: [{ translateX: slideAnim }],
+              shadowRadius: switchHeight * 0.1,
+              shadowOffset: { width: 0, height: switchHeight * 0.1 },
+            },
           ]}
         >
-          <Text style={[styles.switchText, { fontSize: textSize }]}>{isEnglish ? 'EN' : 'BN'}</Text>
+          <Text
+            style={[
+              styles.thumbText,
+              {
+                fontSize: fontSize,
+              },
+            ]}
+          >
+            {isEnglish ? 'EN' : 'BN'}
+          </Text>
         </Animated.View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  switchBackground: {
-    borderRadius: 50,
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    alignItems: 'center',
+  track: {
+    backgroundColor: '#fff',
     position: 'relative',
-    paddingHorizontal: paddingSize,
-    borderWidth: 2,
-    borderColor: '#20ACE2',
-  },
-  switchThumb: {
-    position: 'absolute',
-    backgroundColor: '#20ACE2',
-    borderRadius: 50,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  switchText: {
-    color: 'white',
-    fontWeight: 'bold',
+    elevation: 2,
+    borderColor: '#20ACE2',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
   },
   label: {
     position: 'absolute',
     fontWeight: 'bold',
+    zIndex: 1,
+    color: '#20ACE2',
   },
-  labelEN: {
-    left: '18%',
+  thumb: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    backgroundColor: '#20ACE2',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
   },
-  labelBN: {
-    right: '18%',
+  thumbText: {
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
 
-export default CustomLanguageSwitch;
+export default LanguageSwitch;

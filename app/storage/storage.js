@@ -5,6 +5,7 @@ export const StorageKeys = {
     Token: "token",
     phone: "phone",
     IsAuthenticated: "is_authenticated",
+    Language: "language_preference",
 };
 
 export const saveUserData = (user = {}, token, phone) => {
@@ -45,4 +46,12 @@ export const removeUserData = () => {
   } catch (error) {
     console.error("Error removing user data:", error);
   }
+};
+
+export const saveLanguagePreference = (isEnglish) => {
+    storage.set(StorageKeys.Language, isEnglish);
+};
+
+export const getLanguagePreference = () => {
+    return storage.getBoolean(StorageKeys.Language) ?? true;
 };
