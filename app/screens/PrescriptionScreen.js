@@ -15,16 +15,15 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
 import { WebView } from "react-native-webview";
 
 import PdfIcon from "../assets/icons/pdf.svg";
 import DeleteIcon from "../assets/icons/trash.svg";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchPrescriptions } from "../redux/features/prescriptions/prescriptionSlice";
-import { useSelector } from "react-redux";
 import Loader from "../components/common/Loader";
 import { formatDate } from "../utils/constants";
+import FlashMessage from "../components/shared/FlashMessage";
 
 const window = Dimensions.get("window");
 const { width, height } = window;
@@ -38,28 +37,19 @@ const PrescriptionScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
-  const { list, isLoading, error } = useSelector(
-    (state) => state.prescriptions
-  );
-  useEffect(() => {
-    dispatch(fetchPrescriptions(token));
-  }, [dispatch]);
-
-
+  const { list, isLoading, error } = useSelector((state) => state.prescriptions);
+  
   const [selectedPdf, setSelectedPdf] = useState(null);
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [appState, setAppState] = useState(AppState.currentState);
-  const [pdfError, setPdfError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [webViewSource, setWebViewSource] = useState(null);
+  const MAX_RETRY_COUNT = 3;
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        // Any cleanup needed
-      };
-    }, [])
-  );
+  useEffect(() => {
+    dispatch(fetchPrescriptions(token));
+  }, [dispatch, token]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -91,6 +81,70 @@ const PrescriptionScreen = ({ navigation }) => {
     return () => backHandler.remove();
   }, [pdfModalVisible]);
 
+  const openPdfInWebView = (pdfUrl) => {
+    if (!pdfUrl) {
+      FlashMessage.error("Invalid prescription URL");
+      return;
+    }
+    
+    setSelectedPdf(pdfUrl);
+    setPdfLoading(true);
+    setRetryCount(0);
+    
+    const finalUrl = Platform.OS === "android"
+      ? `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`
+      : pdfUrl;
+
+    setWebViewSource({ uri: finalUrl });
+    setPdfModalVisible(true);
+  };
+
+  const closePdfViewer = useCallback(() => {
+    setPdfModalVisible(false);
+    setPdfLoading(false);
+
+    setTimeout(() => {
+      setWebViewSource(null);
+      setSelectedPdf(null);
+    }, 300);
+  }, []);
+
+  const handleWebViewError = (error) => {
+    setPdfLoading(false);
+    
+    if (retryCount < MAX_RETRY_COUNT) {
+      setRetryCount(prev => prev + 1);
+      FlashMessage.info(`Retrying to load PDF (${retryCount + 1}/${MAX_RETRY_COUNT})...`);
+      
+      setTimeout(() => {
+        if (selectedPdf) {
+          const finalUrl = Platform.OS === "android"
+            ? `https://docs.google.com/viewer?url=${encodeURIComponent(selectedPdf)}&embedded=true`
+            : selectedPdf;
+          setWebViewSource({ uri: finalUrl });
+          setPdfLoading(true);
+        }
+      }, 1500);
+    } else {
+      FlashMessage.error("Failed to load PDF. Please try again later.");
+      closePdfViewer();
+    }
+  };
+
+  const handleManualRetry = () => {
+    if (selectedPdf) {
+      setPdfLoading(true);
+      setRetryCount(0);
+      
+      const finalUrl = Platform.OS === "android"
+        ? `https://docs.google.com/viewer?url=${encodeURIComponent(selectedPdf)}&embedded=true`
+        : selectedPdf;
+      
+      setWebViewSource({ uri: finalUrl });
+      FlashMessage.info("Retrying to load PDF...");
+    }
+  };
+
   const handleDeletePrescription = (id) => {
     Alert.alert(
       "Delete Prescription",
@@ -100,7 +154,7 @@ const PrescriptionScreen = ({ navigation }) => {
         {
           text: "Delete",
           onPress: () => {
-            console.log("Delete prescription id:", id);
+            FlashMessage.success("Prescription deleted successfully");
           },
           style: "destructive",
         },
@@ -113,31 +167,6 @@ const PrescriptionScreen = ({ navigation }) => {
       navigation.goBack();
     }
   };
-  const openPdfInWebView = (pdfUrl) => {
-    setSelectedPdf(pdfUrl);
-    setPdfLoading(true);
-    setPdfError(false);
-    const finalUrl =
-      Platform.OS === "android"
-        ? `https://docs.google.com/viewer?url=${encodeURIComponent(
-            pdfUrl
-          )}&embedded=true`
-        : pdfUrl;
-
-    setWebViewSource({ uri: finalUrl });
-    setPdfModalVisible(true);
-  };
-
-  const closePdfViewer = useCallback(() => {
-    setPdfModalVisible(false);
-    setPdfLoading(false);
-    setPdfError(false);
-
-    setTimeout(() => {
-      setWebViewSource(null);
-      setSelectedPdf(null);
-    }, 300);
-  }, []);
 
   const renderPrescriptionItem = ({ item }) => (
     <View style={styles.prescriptionItem}>
@@ -151,9 +180,7 @@ const PrescriptionScreen = ({ navigation }) => {
         </View>
         <View style={styles.prescriptionDetails}>
           <Text style={styles.prescriptionName}>{item.name}</Text>
-          <Text style={styles.prescriptionDate}>{item.date}
-             {/* • <Text style={styles.statusCompleted}>{item.status}</Text> */}
-             </Text>
+          <Text style={styles.prescriptionDate}>{item.date}</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity
@@ -179,6 +206,7 @@ const PrescriptionScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Prescription</Text>
         <View style={styles.rightPlaceholder} />
       </View>
+      
       {isLoading ? (
         <Loader />
       ) : (
@@ -197,6 +225,12 @@ const PrescriptionScreen = ({ navigation }) => {
           initialNumToRender={6}
           maxToRenderPerBatch={10}
           windowSize={5}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Feather name="file-text" size={normalize(50)} color="#1a3b5d" />
+              <Text style={styles.emptyText}>No prescriptions found</Text>
+            </View>
+          }
         />
       )}
       <Modal
@@ -205,12 +239,7 @@ const PrescriptionScreen = ({ navigation }) => {
         transparent={false}
         onRequestClose={closePdfViewer}
       >
-        <View
-          style={[
-            styles.pdfContainer,
-            // { paddingTop: insets.top }
-          ]}
-        >
+        <View style={styles.pdfContainer}>
           <View style={styles.pdfHeader}>
             <TouchableOpacity
               onPress={closePdfViewer}
@@ -231,29 +260,6 @@ const PrescriptionScreen = ({ navigation }) => {
               </View>
             )}
 
-            {pdfError && (
-              <View style={styles.errorContainer}>
-                <Feather
-                  name="alert-circle"
-                  size={normalize(50)}
-                  color="#e74c3c"
-                />
-                <Text style={styles.errorText}>Failed to load PDF</Text>
-                <TouchableOpacity
-                  style={styles.retryButton}
-                  onPress={() => {
-                    if (selectedPdf) {
-                      setPdfError(false);
-                      setPdfLoading(true);
-                      openPdfInWebView(selectedPdf);
-                    }
-                  }}
-                >
-                  <Text style={styles.retryText}>Try Again</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
             {webViewSource && (
               <WebView
                 source={webViewSource}
@@ -264,13 +270,27 @@ const PrescriptionScreen = ({ navigation }) => {
                 startInLoadingState={true}
                 scalesPageToFit={true}
                 onLoadStart={() => setPdfLoading(true)}
-                onLoad={() => setPdfLoading(false)}
-                onLoadEnd={() => setPdfLoading(false)}
-                onError={(error) => {
-                  console.log("WebView Error:", error);
+                onLoad={() => {
                   setPdfLoading(false);
-                  setPdfError(true);
                 }}
+                onLoadEnd={() => setPdfLoading(false)}
+                onError={handleWebViewError}
+                renderError={() => (
+                  <View style={styles.errorContainer}>
+                    <Feather
+                      name="alert-circle"
+                      size={normalize(50)}
+                      color="#e74c3c"
+                    />
+                    <Text style={styles.errorText}>Failed to load PDF</Text>
+                    <TouchableOpacity
+                      style={styles.retryButton}
+                      onPress={handleManualRetry}
+                    >
+                      <Text style={styles.retryText}>Try Again</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               />
             )}
           </View>
@@ -354,26 +374,23 @@ const styles = StyleSheet.create({
     fontSize: normalize(14),
     color: "#667b94",
   },
-  statusCompleted: {
-    color: "#4caf50",
-  },
   deleteButton: {
     padding: normalize(8),
   },
   pdfContainer: {
     flex: 1,
-    backgroundColor: "red",
+    backgroundColor: "white",
   },
   pdfHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: wp(4),
-    // paddingVertical: hp(1),
+    paddingVertical: hp(1.5),
     borderBottomWidth: 1,
     borderBottomColor: "#e1e8ed",
     backgroundColor: "white",
-    // height: hp(7),
+    height: hp(7),
     zIndex: 10,
   },
   closePdfButton: {
@@ -421,12 +438,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f5f7fa",
+    padding: normalize(20),
   },
   errorText: {
     fontSize: normalize(18),
     color: "#1a3b5d",
     marginTop: normalize(20),
     marginBottom: normalize(20),
+    textAlign: "center",
   },
   retryButton: {
     paddingHorizontal: normalize(20),
@@ -438,6 +457,17 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: normalize(16),
     fontWeight: "600",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: hp(10),
+  },
+  emptyText: {
+    fontSize: normalize(16),
+    color: "#667b94",
+    marginTop: normalize(10),
   },
 });
 
