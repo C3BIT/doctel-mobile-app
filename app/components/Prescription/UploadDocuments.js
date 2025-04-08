@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import PrescriptionIcon from '../../assets/icons/Prescription.svg';
 import UploadIcon from '../../assets/icons/Upload.svg';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get("window");
 const BASE_WIDTH = 375;
@@ -16,17 +17,18 @@ const responsiveWidth = (w) => (width * w) / BASE_WIDTH;
 const responsiveFontSize = (size) => (width * size) / BASE_WIDTH;
 
 const UploadDocuments = ({ navigation }) => {
+  const { t } = useTranslation();
   const documentTypes = [
     {
       icon: PrescriptionIcon,
-      title: 'Prescription',
-      subtitle: 'View Your Previous Prescription',
+      title: t("prescription"),
+      subtitle: t("viewPreviousPrescription"),
       navigateTo: 'Prescription'
     },
     {
       icon: UploadIcon,
-      title: 'Upload',
-      subtitle: 'Upload Lab reports, prescription etc',
+      title: t("upload"),
+      subtitle: t("uploadLabReports"),
       navigateTo: 'Upload'
     }
   ];

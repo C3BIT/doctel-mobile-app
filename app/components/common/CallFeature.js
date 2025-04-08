@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useWebSocket } from '../../providers/WebSocketProvider';
 import VideoCallScreen from '../Calling/VideoCallScreen';
+import { useTranslation } from 'react-i18next';
 
 if (NativeModules.RNJitsiMeetingModule) {
   if (!NativeModules.RNJitsiMeetingModule.addListener) {
@@ -28,6 +29,7 @@ const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
 const CallFeature = () => {
+  const { t } = useTranslation();
   const [isVideoCallModalVisible, setIsVideoCallModalVisible] = useState(false);
   const [isAudioCallModalVisible, setIsAudioCallModalVisible] = useState(false);
   const { socket, isConnected } = useWebSocket();
@@ -74,7 +76,7 @@ const CallFeature = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Consult With A Doctor Now !</Text>
+      <Text style={styles.title}>{t("consultWithDoctor")}</Text>
 
       <TouchableOpacity
         style={styles.optionContainer}
@@ -88,9 +90,9 @@ const CallFeature = () => {
           />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.optionTitle}>Video Call</Text>
+          <Text style={styles.optionTitle}>{t("videoCall")}</Text>
           <Text style={styles.optionSubtext}>
-            Connect with a doctor, no appointment
+          {t("connectNoAppointment")}
           </Text>
         </View>
       </TouchableOpacity>
@@ -107,9 +109,9 @@ const CallFeature = () => {
           />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.optionTitle}>Audio Call</Text>
+          <Text style={styles.optionTitle}> {t("audioCall")}</Text>
           <Text style={styles.optionSubtext}>
-            Connect with a doctor, no appointment
+          {t("connectNoAppointment")}
           </Text>
         </View>
       </TouchableOpacity>
@@ -126,9 +128,9 @@ const CallFeature = () => {
           />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.optionTitle}>Call History</Text>
+          <Text style={styles.optionTitle}> {t("callHistory")}</Text>
           <Text style={styles.optionSubtext}>
-            View Your Previous Call History
+          {t("viewCallHistory")}
           </Text>
         </View>
       </TouchableOpacity>
