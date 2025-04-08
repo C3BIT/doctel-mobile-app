@@ -1,13 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
-import { getLanguagePreference, saveLanguagePreference } from '../../storage/storage';
+import { useTranslation } from 'react-i18next';
+import { getLanguage, setLanguage } from '../../storage/storage';
 
 const LanguageSwitch = () => {
-  const [isEnglish, setIsEnglish] = useState(true);
+  const { i18n } = useTranslation();
   const slideAnim = useRef(new Animated.Value(0)).current;
-  
   const { width: screenWidth } = Dimensions.get('window');
-  
   const switchWidth = Math.min(Math.max(80, screenWidth * 0.20), 100);
   const switchHeight = switchWidth * 0.4; 
   const thumbSize = switchHeight * 0.7;
@@ -17,24 +16,30 @@ const LanguageSwitch = () => {
   const thumbOffset = borderWidth + padding;
   
   useEffect(() => {
-    const loadPref = async () => {
-      const saved = await getLanguagePreference();
-      setIsEnglish(saved);
-      slideAnim.setValue(saved ? thumbOffset : switchWidth - thumbSize - thumbOffset);
-    };
-    loadPref();
-  }, [slideAnim, switchWidth, thumbSize, thumbOffset]);
-
-  const toggleLanguage = () => {
-    const newLang = !isEnglish;
-    setIsEnglish(newLang);
-    saveLanguagePreference(newLang);
-
+    const savedLanguage = getLanguage();
+    i18n.changeLanguage(savedLanguage);
+    const initialPosition = savedLanguage === 'en' 
+      ? thumbOffset 
+      : switchWidth - thumbSize - thumbOffset;
+    slideAnim.setValue(initialPosition);
+  }, []);
+  
+  useEffect(() => {
+    const position = i18n.language === 'en' 
+      ? thumbOffset 
+      : switchWidth - thumbSize - thumbOffset;
+      
     Animated.timing(slideAnim, {
-      toValue: newLang ? thumbOffset : switchWidth - thumbSize - thumbOffset,
+      toValue: position,
       duration: 200,
       useNativeDriver: true,
     }).start();
+  }, [i18n.language, switchWidth, thumbSize, thumbOffset]);
+
+  const toggleLanguage = () => {
+      const newLanguage = i18n.language === 'en' ? 'bn' : 'en';
+      i18n.changeLanguage(newLanguage);
+      setLanguage(newLanguage);
   };
 
   return (
@@ -53,7 +58,7 @@ const LanguageSwitch = () => {
           },
         ]}
       >
-        {!isEnglish && (
+        {i18n.language === 'bn' && (
           <Text
             style={[
               styles.label,
@@ -67,7 +72,7 @@ const LanguageSwitch = () => {
           </Text>
         )}
 
-        {isEnglish && (
+        {i18n.language === 'en' && (
           <Text
             style={[
               styles.label,
@@ -102,7 +107,7 @@ const LanguageSwitch = () => {
               },
             ]}
           >
-            {isEnglish ? 'EN' : 'BN'}
+            {i18n.language === 'en' ? 'EN' : 'BN'}
           </Text>
         </Animated.View>
       </Pressable>

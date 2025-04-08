@@ -1,4 +1,5 @@
 import React, { useEffect, Suspense } from "react";
+import "./app/utils/i18n";
 import { Provider } from "react-redux";
 import FlashMessage from "react-native-flash-message";
 import { StatusBar } from "react-native";

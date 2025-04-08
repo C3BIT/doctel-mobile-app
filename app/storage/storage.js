@@ -48,10 +48,9 @@ export const removeUserData = () => {
   }
 };
 
-export const saveLanguagePreference = (isEnglish) => {
-    storage.set(StorageKeys.Language, isEnglish);
+export const setLanguage = (language) => {
+  storage.set(StorageKeys.Language, language);
 };
-
-export const getLanguagePreference = () => {
-    return storage.getBoolean(StorageKeys.Language) ?? true;
-};
+export const getLanguage = () => {
+  return storage.getString(StorageKeys.Language) || "en";
+}

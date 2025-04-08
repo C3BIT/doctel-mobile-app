@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
 import WellnessCard from './../common/WellnessCard';
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -11,12 +12,13 @@ const calculateResponsiveDimension = {
 };
 
 const WellnessSection = () => {
+  const { t } = useTranslation();
   return (
     <View style={styles.wellnessSectionContainer}>
       <View style={styles.wellnessSectionContent}>
         <View style={styles.wellnessTextContainer}>
           <Text style={styles.wellnessPromptText}>
-            How are you feeling today?
+         {t("howAreYouFeeling")}
           </Text>
         </View>
         <Image
