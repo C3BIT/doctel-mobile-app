@@ -50,7 +50,6 @@ const resources = {
       weight: "Weight (kg)",
       update: "Update",
       completed: "Completed",
-      prescription: "Prescription",
     },
   },
   bn: {
@@ -100,7 +99,6 @@ const resources = {
       weight: "ওজন (কেজি)",
       update: "আপডেট করুন",
       completed: "সম্পন্ন",
-      prescription: "প্রেসক্রিপশন",
     },
   },
 };

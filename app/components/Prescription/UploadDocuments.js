@@ -35,7 +35,7 @@ const UploadDocuments = ({ navigation }) => {
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Upload Documents</Text>
+      <Text style={styles.sectionTitle}>{t("uploadDocuments")}</Text>
       <View style={styles.container}>
         {documentTypes.map((item, index) => {
           const Icon = item.icon;
