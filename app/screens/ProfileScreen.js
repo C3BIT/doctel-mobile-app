@@ -29,9 +29,11 @@ import {
 import { isEqual } from 'lodash';
 import FlashMessage from './../components/shared/FlashMessage';
 import { ProfileSkeleton } from "../components/skeleton/ProfileSkeleton";
+import { useTranslation } from "react-i18next";
 
 const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { token } = useSelector((state) => state.auth);
   const { isLoading, updateLoading, profile, status, error } = useSelector((state) => state.patient);
   
@@ -216,10 +218,11 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleBackPress = () => {
-    if (navigation && navigation.goBack) {
-      navigation.goBack();
+    if (navigation && navigation.navigate) {
+      navigation.navigate('Home');
     }
   };
+  
 
   const isPortrait = screenDimensions.height > screenDimensions.width;
   const cardWidth = isPortrait
@@ -367,7 +370,7 @@ const ProfileScreen = ({ navigation }) => {
 
                       <View style={styles.row}>
                         <Input
-                          label="First Name"
+                          label={t("firstName")}
                           value={profileData.firstName}
                           onChangeText={(text) =>
                             setProfileData({ ...profileData, firstName: text })
@@ -375,7 +378,7 @@ const ProfileScreen = ({ navigation }) => {
                           containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
                         />
                         <Input
-                          label="Last Name"
+                          label={t("lastName")}
                           value={profileData.lastName}
                           onChangeText={(text) =>
                             setProfileData({ ...profileData, lastName: text })
@@ -386,7 +389,7 @@ const ProfileScreen = ({ navigation }) => {
 
                       <View style={styles.row}>
                         <Dropdown
-                          label="Blood group"
+                          label={t("bloodGroup")}
                           value={profileData.bloodGroup}
                           options={bloodGroups}
                           onSelect={handleSelectBloodGroup}
@@ -397,7 +400,7 @@ const ProfileScreen = ({ navigation }) => {
                           containerStyle={[styles.halfInput, dynamicStyles.inputWrapper]}
                         />
                         <Dropdown
-                          label="Gender"
+                          label={t("gender")}
                           value={profileData.gender}
                           options={genders}
                           onSelect={handleSelectGender}
@@ -411,7 +414,7 @@ const ProfileScreen = ({ navigation }) => {
 
                       <View style={dynamicStyles.inputWrapper}>
                         <DatePicker
-                          label="Date of birth"
+                          label={t("dateOfBirth")}
                           value={profileData.dateOfBirth}
                           onPress={() => setShowDatePicker(true)}
                           isVisible={showDatePicker}
@@ -422,7 +425,7 @@ const ProfileScreen = ({ navigation }) => {
 
                       <View style={dynamicStyles.phoneWrapper}>
                         <Input
-                          label="Phone Number"
+                          label={t("phoneNumber")}
                           value={profileData.phone}
                           editable={false}
                           keyboardType="phone-pad"
@@ -432,7 +435,7 @@ const ProfileScreen = ({ navigation }) => {
 
                       <View style={styles.row}>
                         <Input
-                          label="Height (cm)"
+                          label={t("height")}
                           value={profileData.height}
                           onChangeText={(text) => validateNumericInput(text, 'height')}
                           keyboardType="decimal-pad"
@@ -440,7 +443,7 @@ const ProfileScreen = ({ navigation }) => {
                           placeholder="0.00"
                         />
                         <Input
-                          label="Weight (kg)"
+                          label={t("weight")}
                           value={profileData.weight}
                           onChangeText={(text) => validateNumericInput(text, 'weight')}
                           keyboardType="decimal-pad"
@@ -450,7 +453,7 @@ const ProfileScreen = ({ navigation }) => {
                       </View>
 
                       <Button
-                        title={updateLoading ? "Updating..." : "Update"}
+                        title={updateLoading ? "Updating..." : t("update")}
                         onPress={handleUpdate}
                         disabled={!isFormDirty() || updateLoading}
                         style={{

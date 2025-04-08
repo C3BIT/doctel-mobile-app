@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -8,22 +9,23 @@ const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
 const WellnessCard = () => {
+    const { t } = useTranslation();
   return (
     <View style={styles.wellnessCard}>
       <View style={styles.wellnessBox}>
-        <Text style={styles.wellnessLabel}>Wellness Score</Text>
+        <Text style={styles.wellnessLabel}>  {t("wellnessScore")}</Text>
         <Text style={styles.wellnessScore}>100</Text>
         <Image source={require('../../assets/wellness.png')} style={styles.wellnessImage} />
       </View>
 
       <View style={styles.wellnessDetails}>
         <View style={styles.testHeader}>
-          <Text style={styles.testTitle}>WELLNESS TEST</Text>
+          <Text style={styles.testTitle}>{t("wellnessTest")}</Text>
           <Text style={styles.testScore}>8/10</Text>
         </View>
-        <Text style={styles.testDescription}>Let's do all the tests and update score</Text>
+        <Text style={styles.testDescription}>{t("updateScore")}</Text>
         <TouchableOpacity>
-          <Text style={styles.moreDetails}>More Details</Text>
+          <Text style={styles.moreDetails}>{t("moreDetails")}</Text>
         </TouchableOpacity>
       </View>
     </View>

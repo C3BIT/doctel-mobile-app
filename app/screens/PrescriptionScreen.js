@@ -24,6 +24,7 @@ import { fetchPrescriptions } from "../redux/features/prescriptions/prescription
 import Loader from "../components/common/Loader";
 import { formatDate } from "../utils/constants";
 import FlashMessage from "../components/shared/FlashMessage";
+import { useTranslation } from "react-i18next";
 
 const window = Dimensions.get("window");
 const { width, height } = window;
@@ -36,6 +37,7 @@ const hp = (percentage) => height * (percentage / 100);
 const PrescriptionScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { token } = useSelector((state) => state.auth);
   const { list, isLoading, error } = useSelector((state) => state.prescriptions);
   
@@ -203,7 +205,7 @@ const PrescriptionScreen = ({ navigation }) => {
         >
           <Feather name="chevron-left" size={normalize(24)} color="#1a3b5d" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Prescription</Text>
+        <Text style={styles.headerTitle}>{t("prescription")}</Text>
         <View style={styles.rightPlaceholder} />
       </View>
       
@@ -248,7 +250,7 @@ const PrescriptionScreen = ({ navigation }) => {
             >
               <Feather name="x" size={normalize(24)} color="#1a3b5d" />
             </TouchableOpacity>
-            <Text style={styles.pdfHeaderTitle}>Prescription</Text>
+            <Text style={styles.pdfHeaderTitle}>{t("prescription")}</Text>
             <View style={styles.rightPlaceholder} />
           </View>
 

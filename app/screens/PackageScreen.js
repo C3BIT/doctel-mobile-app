@@ -43,7 +43,11 @@ const PackageScreen = () => {
     },
   ];
 
-  const handleGoBack = () => navigation.goBack();
+  const handleBackPress = () => {
+    if (navigation && navigation.navigate) {
+      navigation.navigate('Home');
+    }
+  };
 
   const handleSubscriptionToggle = (packageId) => {
     console.log(`Toggle subscription for package: ${packageId}`);
@@ -60,7 +64,7 @@ const PackageScreen = () => {
         style={[styles.headerContainer, { paddingTop: statusBarHeight }]}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
             <ChevronLeft size={24} color="#0E4946" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Package</Text>

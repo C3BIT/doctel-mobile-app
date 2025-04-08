@@ -1,12 +1,13 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Image, 
-  StyleSheet, 
+import React from "react";
+import { useTranslation } from "react-i18next";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
   Dimensions,
-} from 'react-native';
+} from "react-native";
 
 const { width, height } = Dimensions.get("window");
 const dynamicWidth = (percentage) => (width * percentage) / 100;
@@ -14,10 +15,9 @@ const dynamicHeight = (percentage) => (height * percentage) / 100;
 const dynamicFontSize = (size) => (width * size) / 375;
 
 const AppointmentContainer = () => {
+  const { t } = useTranslation();
   return (
-    <TouchableOpacity 
-      style={styles.appointmentButton} 
-    >
+    <TouchableOpacity style={styles.appointmentButton}>
       <View style={styles.appointmentContent}>
         <View style={styles.iconContainer}>
           <Image
@@ -27,9 +27,9 @@ const AppointmentContainer = () => {
           />
         </View>
         <View>
-          <Text style={styles.appointmentText}>Book Appointment</Text>
+          <Text style={styles.appointmentText}>{t("bookAppointment")}</Text>
           <Text style={styles.appointmentSubtext}>
-            View Your Previous Call History
+          {t("viewCallHistory")}
           </Text>
         </View>
       </View>
