@@ -216,10 +216,11 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleBackPress = () => {
-    if (navigation && navigation.goBack) {
-      navigation.goBack();
+    if (navigation && navigation.navigate) {
+      navigation.navigate('Home');
     }
   };
+  
 
   const isPortrait = screenDimensions.height > screenDimensions.width;
   const cardWidth = isPortrait
