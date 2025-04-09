@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { sendOtp } from "../../../redux/features/auth/patientAuthSlice";
 import Loader from "../../../components/common/Loader";
 import FlashMessage from "../../../components/shared/FlashMessage";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -29,6 +30,7 @@ const getResponsiveSize = (size) => {
 
 const LoginScreen = () => {
   const { isLoading, status } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const [mobileNumber, setMobileNumber] = useState("");
   const navigation = useNavigation();
@@ -95,12 +97,12 @@ const LoginScreen = () => {
 
                 <View style={styles.contentContainer}>
                   <View style={styles.inputSection}>
-                    <Text style={styles.signInText}>Sign In</Text>
+                    <Text style={styles.signInText}> {t("signIn")}</Text>
 
                     <View style={styles.inputContainer}>
                       <TextInput
                         style={styles.input}
-                        placeholder="Enter Mobile Number"
+                        placeholder={t("enterMobileNumber")}
                         placeholderTextColor="#8DA1B5"
                         keyboardType="phone-pad"
                         maxLength={11}
@@ -115,14 +117,14 @@ const LoginScreen = () => {
                       onPress={handleContinue}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.continueButtonText}>Continue</Text>
+                      <Text style={styles.continueButtonText}>{t("continue")}</Text>
                     </TouchableOpacity>
                   </View>
 
                   <View style={styles.bottomSection}>
                     <View style={styles.dividerContainer}>
                       <View style={styles.divider} />
-                      <Text style={styles.dividerText}>OR</Text>
+                      <Text style={styles.dividerText}>{t("or")}</Text>
                       <View style={styles.divider} />
                     </View>
 
@@ -166,7 +168,7 @@ const LoginScreen = () => {
 
                     <View style={styles.signUpContainer}>
                       <Text style={styles.noAccountText}>
-                        Don't have an account?
+                      {t("dontHaveAccount")}
                       </Text>
                       <TouchableOpacity
                         onPress={handleSignUp}

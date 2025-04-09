@@ -9,7 +9,7 @@ const resources = {
       enterMobileNumber: "Enter Mobile Number",
       continue: "Continue",
       or: "OR",
-      dontHaveAccount: "Don't have an account? Sign up",
+      dontHaveAccount: "Don't have an account?",
       verification: "Verification",
       verificationCodeSent:
         "Enter the verification code that was sent to your mobile number",

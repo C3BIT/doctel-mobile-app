@@ -22,6 +22,7 @@ import Loader from "../../../components/common/Loader";
 
 import { patientLogin } from "../../../redux/features/auth/patientAuthSlice";
 import FlashMessage from "../../../components/shared/FlashMessage";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -34,6 +35,7 @@ const OTP_LENGTH = 4;
 const INITIAL_TIMER_SECONDS = 150;
 
 const OTPVerificationScreen = () => {
+  const { t } = useTranslation();
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [timer, setTimer] = useState(INITIAL_TIMER_SECONDS);
 
@@ -161,10 +163,9 @@ const OTPVerificationScreen = () => {
 
                 <View style={styles.contentContainer}>
                   <View style={styles.verificationContainer}>
-                    <Text style={styles.verificationTitle}>Verification</Text>
+                    <Text style={styles.verificationTitle}>{t("verification")}</Text>
                     <Text style={styles.verificationSubtitle}>
-                      Enter the verification code that was sent to your mobile
-                      number
+                    {t("verificationCodeSent")} {phone}
                     </Text>
 
                     <View style={styles.otpContainer}>
@@ -202,7 +203,7 @@ const OTPVerificationScreen = () => {
                           onPress={handleResend}
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                          <Text style={styles.resendButton}>Resend Code</Text>
+                          <Text style={styles.resendButton}>{t("resendCode")}</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -217,7 +218,7 @@ const OTPVerificationScreen = () => {
                       disabled={otp.join("").length !== OTP_LENGTH}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.verifyButtonText}>Verify</Text>
+                      <Text style={styles.verifyButtonText}>{t("verify")}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: getResponsiveSize(32),
     width: "90%",
-    maxWidth: 300,
+    // maxWidth: 300,
   },
   otpContainer: {
     flexDirection: "row",
