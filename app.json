@@ -23,7 +23,7 @@
       "package": "com.anonymous.doctelmobileapp"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.ico"
     }
   }
   
