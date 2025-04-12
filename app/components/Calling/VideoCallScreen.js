@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import {
   Platform,
   StatusBar,
   Alert,
-  AppState,
 } from 'react-native';
 import WaveBackground from '../common/WaveBackground';
 import { useWebSocket } from '../../providers/WebSocketProvider';
@@ -27,36 +26,40 @@ const VideoCallScreen = ({ visible, onClose }) => {
   const [jitsiRoomName, setJitsiRoomName] = useState(''); 
   const { socket } = useWebSocket();
   const callTimeoutRef = useRef(null);
-  const [doctorInfo, setDoctorInfo] = useState({});
+  const [doctorInfo, setDoctorInfo] = useState({
+    doctorName: '',
+    credentials: '',
+    doctorImage: null
+  });
   const navigation = useNavigation();
 
   useEffect(() => {
     if (visible) {
       initiateCall();
-      callTimeoutRef.current = setTimeout(() => {
-        if (callStatus === 'connecting') {
-          setCallStatus('failed');
-          Alert.alert(
-            'Call Failed',
-            'No doctors available at this moment. Please try again later.',
-            [{ text: 'OK', onPress: handleClose }]
-          );
-        }
-      }, 30000);
+      // callTimeoutRef.current = setTimeout(() => {
+      //   if (callStatus === 'connecting') {
+      //     setCallStatus('failed');
+      //     Alert.alert(
+      //       'Call Failed',
+      //       'No doctors available at this moment. Please try again later.',
+      //       [{ text: 'OK', onPress: handleClose }]
+      //     );
+      //   }
+      // }, 30000);
     }
 
-    return () => {
-      if (callTimeoutRef.current) {
-        clearTimeout(callTimeoutRef.current);
-      }
-    };
+    // return () => {
+    //   if (callTimeoutRef.current) {
+    //     clearTimeout(callTimeoutRef.current);
+    //   }
+    // };
   }, [visible]);
 
   useEffect(() => {
     if (!socket) return;
 
     const handleInitiated = (data) => {
-      console.log('Call initiated:', data);
+      setDoctorInfo(data);
       if (data.jitsiRoom) {
         const roomUrl = data.jitsiRoom;
         let roomName;
@@ -158,6 +161,9 @@ const VideoCallScreen = ({ visible, onClose }) => {
   };
 
   const renderCallingScreen = () => {
+    const defaultAvatar = require('../../assets/avatar.png');
+    const avatarSource = doctorInfo?.doctorImage ? { uri: doctorInfo.doctorImage } : defaultAvatar;
+    
     return (
       <WaveBackground>
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -175,17 +181,18 @@ const VideoCallScreen = ({ visible, onClose }) => {
           <View style={styles.callingContainer}>
             <View style={styles.doctorAvatarContainer}>
               <Image
-                source={require('../../assets/avatar.png')}
+                source={avatarSource}
                 style={styles.doctorAvatar}
                 resizeMode="cover"
+                defaultSource={defaultAvatar}
               />
             </View>
             
             <Text style={styles.doctorName}>
-              {doctorInfo?.name || 'Dr. Waiting for doctor...'}
+              {doctorInfo?.doctorName || 'Connecting to doctor...'}
             </Text>
             <Text style={styles.doctorCredentials}>
-              {doctorInfo?.credentials || 'Connecting to a specialist'}
+              {doctorInfo?.credentials || 'Finding available specialist'}
             </Text>
             
             <Text style={styles.callingText}>
@@ -263,6 +270,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+    overflow: 'hidden',
   },
   doctorAvatar: {
     width: scale(105),
