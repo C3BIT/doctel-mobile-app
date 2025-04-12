@@ -7,7 +7,7 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import CustomLanguageSwitch from './../common/CustomLanguageSwitch';
+import LanguageSwitch from './../common/CustomLanguageSwitch';
 const { width, height } = Dimensions.get("window");
 
 const calculateResponsiveDimension = {
@@ -24,7 +24,7 @@ const AppHeader = () => {
           style={styles.brandLogo}
           resizeMode="contain"
         />
-        <CustomLanguageSwitch />
+        <LanguageSwitch />
       </View>
       <View style={styles.divider} />
     </View>

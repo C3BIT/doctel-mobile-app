@@ -1,70 +1,83 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions, SafeAreaView } from "react-native";
+import { useTranslation } from "react-i18next";
 import WellnessCard from './../common/WellnessCard';
 
 const { width, height } = Dimensions.get("window");
 
-const calculateResponsiveDimension = {
-  width: (percentage) => (width * percentage) / 100,
-  height: (percentage) => (height * percentage) / 100,
-  fontSize: (size) => (width * size) / 375,
+const dp = {
+  w: (percentage) => (width * percentage) / 100,
+  h: (percentage) => (height * percentage) / 100,
+  fs: (size) => Math.min((width * size) / 375, (height * size) / 812),
 };
 
 const WellnessSection = () => {
+  const { t } = useTranslation();
+  
   return (
-    <View style={styles.wellnessSectionContainer}>
-      <View style={styles.wellnessSectionContent}>
-        <View style={styles.wellnessTextContainer}>
-          <Text style={styles.wellnessPromptText}>
-            How are you feeling today?
-          </Text>
+    <SafeAreaView>
+      <View style={styles.wellnessSectionContainer}>
+        <View style={styles.wellnessSectionContent}>
+          <View style={styles.wellnessTextContainer}>
+            <Text style={styles.wellnessPromptText}>
+              {t("howAreYouFeeling")}
+            </Text>
+          </View>
+          <Image
+            source={require("../../assets/leaves.png")}
+            style={styles.decorativeImage}
+            resizeMode="contain"
+          />
         </View>
-        <Image
-          source={require("../../assets/leaves.png")}
-          style={styles.decorativeImage}
-          resizeMode="contain"
-        />
-      </View>
 
-      <View style={styles.wellnessCardWrapper}>
-        <WellnessCard />
+        <View style={styles.wellnessCardWrapper}>
+          <WellnessCard />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   wellnessSectionContainer: {
     backgroundColor: "#20ACE2",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    paddingBottom: calculateResponsiveDimension.height(2),
+    borderBottomLeftRadius: dp.w(5),
+    borderBottomRightRadius: dp.w(5),
+    paddingBottom: dp.h(2),
     overflow: "hidden",
   },
   wellnessSectionContent: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
-    top: calculateResponsiveDimension.height(1),
-    height: calculateResponsiveDimension.height(8),
-    paddingHorizontal: calculateResponsiveDimension.width(5),
+    paddingTop: dp.h(2),
+    paddingHorizontal: dp.w(5),
+    marginBottom: dp.h(2),
+    height: dp.h(8),
+    position: "relative",
   },
   wellnessTextContainer: {
-    flex: 1,
+    flex: 0.7,
     justifyContent: "center",
+    zIndex: 2,
   },
   wellnessPromptText: {
     color: "#FFFFFF",
-    fontSize: calculateResponsiveDimension.fontSize(18),
-    textAlign: "left",
+    fontSize: dp.fs(18),
+    fontWeight: "500",
   },
   decorativeImage: {
-    width: calculateResponsiveDimension.width(30),
-    height: calculateResponsiveDimension.height(25),
-    opacity: 0.7,
+    width: dp.w(30),
+    height: dp.h(12),
+    position: "absolute",
+    right: dp.w(0),
+    top: dp.h(0),
+    opacity: 0.9,
+    zIndex: 1,
   },
   wellnessCardWrapper: {
-    paddingHorizontal: calculateResponsiveDimension.width(5),
+    paddingHorizontal: dp.w(5),
+    marginBottom: dp.h(1),
   },
 });
 
